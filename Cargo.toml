@@ -3,5 +3,7 @@ name = "bevy_reqspost"
 version = "0.1.0"
 edition = "2021"
 
+[lib]
+
 [dependencies]
 bevy = { version = "0.15", default-features = false }
