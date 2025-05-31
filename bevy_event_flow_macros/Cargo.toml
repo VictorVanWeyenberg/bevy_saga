@@ -1,0 +1,14 @@
+[package]
+name = "bevy_event_flow_macros"
+version = "0.1.0"
+edition = "2021"
+
+[lib]
+proc-macro = true
+
+[dependencies]
+bevy_event_flow = { path = "../bevy_event_flow" }
+proc-macro2 = "1.0.95"
+syn = { version = "2.0.101", features = ["extra-traits", "derive"] }
+quote = "1.0.40"
+deluxe = "0.5.0"
