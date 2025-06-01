@@ -1,68 +1,101 @@
 use bevy::app::{App, PostUpdate, Update};
-use bevy::prelude::{Component, Event, EventReader, IntoScheduleConfigs, Query, SystemInput};
+use bevy::prelude::{
+    Component, Entity, Event, EventReader, IntoScheduleConfigs, Query, SystemInput,
+};
 use bevy_event_flow::EventFlow;
 use bevy_event_flow_macros::Request;
 
 #[derive(Request, Event, Clone)]
-#[response(Response)]
-struct Request {
-    to: String,
+#[response(Intermediary)]
+struct Input {
+    entity: Entity,
 }
 
 #[derive(Request, Event, Clone)]
-#[response(ResponseBack)]
-struct Response {
-    message: String,
+#[response(Output)]
+enum Intermediary {
+    Ok { entity: Entity },
+    Err { message: String },
 }
 
 #[derive(Event)]
-#[allow(dead_code)]
-struct ResponseBack {
-    message: String,
+enum Output {
+    Ok { entity: Entity },
+    Err { message: String },
 }
 
 #[derive(Component)]
-#[allow(dead_code)]
+struct Name(String);
+
+#[derive(Component)]
 struct Health(usize);
 
-fn handle_request(Request { to }: Request, _query: Query<&mut Health>) -> Response {
-    println!("Handling request ...");
-    Response {
-        message: format!("Hello, {to}!",),
+fn handle_input(Input { entity }: Input, query: Query<&Name>) -> Intermediary {
+    if let Ok(Name(name)) = query.get(entity.clone()) {
+        println!("Oh no, {name} is hit!");
+        Intermediary::Ok { entity }
+    } else {
+        Intermediary::Err {
+            message: "System handle_input query could not be fulfilled.".to_string(),
+        }
     }
 }
 
-fn handle_response(_response: Response) -> ResponseBack {
-    println!("Handling response ...");
-    ResponseBack {
-        message: "Hello, back!".to_string(),
+fn handle_intermediary(response: Intermediary, mut query: Query<(&Name, &mut Health)>) -> Output {
+    match response {
+        Intermediary::Ok { entity } => {
+            if let Ok((Name(name), mut health)) = query.get_mut(entity.clone()) {
+                health.0 -= 1;
+                println!("{name} took 1 damage!");
+                Output::Ok { entity }
+            } else {
+                Output::Err {
+                    message: "System handle_intermediary query could not be fulfilled.".to_string(),
+                }
+            }
+        }
+        Intermediary::Err { message } => Output::Err { message }
     }
 }
 
-fn read_response(mut reader: EventReader<Response>) {
-    println!("Handling response back ...");
-    for Response { message } in reader.read() {
-        println!("{}", message)
+fn read_intermediary(mut reader: EventReader<Intermediary>) {
+    for intermediary in reader.read() {
+        if let Intermediary::Err { message } = intermediary {
+            println!("{}", message)
+        }
     }
 }
 
-fn read_response_back(mut reader: EventReader<ResponseBack>) {
-    println!("Trying to read response.");
-    for ResponseBack { message } in reader.read() {
-        println!("{}", message)
+fn read_output(mut reader: EventReader<Output>, query: Query<&Name>) {
+    for output in reader.read() {
+        match output {
+            Output::Ok { entity } => {
+                if let Ok(Name(name)) = query.get(entity.clone()) {
+                    println!("Done processing damage for {name}.")
+                } else {
+                    println!("System read_output query could not be fulfilled.")
+                }
+            }
+            Output::Err { message } => println!("{}", message)
+        }
     }
 }
 
 fn main() {
     let mut app = App::new();
-    app.add_event_flow(Update, handle_request)
-        .add_event_flow_after::<Response, Request, _>(Update, handle_response)
-        .add_systems(PostUpdate, (read_response, read_response_back.after(read_response)));
-    app.world_mut().commands().send_event(Request {
-        to: "Vicky".to_string(),
+    app.add_event_flow(Update, handle_input)
+        .add_event_flow_after::<Intermediary, Input, _>(Update, handle_intermediary)
+        .add_systems(
+            PostUpdate,
+            (read_intermediary, read_output.after(read_intermediary)),
+        );
+    let victor = app.world_mut().spawn((Name("Victor".to_string()), Health(10))).id();
+    let luna = app.world_mut().spawn((Name("Luna".to_string()), Health(10))).id();
+    app.world_mut().commands().send_event(Input {
+        entity: victor
     });
-    app.world_mut().commands().send_event(Request {
-        to: "Luna".to_string(),
+    app.world_mut().commands().send_event(Input {
+        entity: luna
     });
     app.update();
 }
