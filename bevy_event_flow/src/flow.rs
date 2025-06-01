@@ -2,7 +2,11 @@ use crate::Request;
 use bevy::app::App;
 use bevy::ecs::schedule::ScheduleLabel;
 use bevy::ecs::system::SystemId;
-use bevy::prelude::{Commands, Event, EventReader, EventWriter, In, IntoScheduleConfigs, IntoSystem, Res, Resource, SystemInput};
+use bevy::prelude::{
+    Commands, Event, EventReader, EventWriter, In, IntoScheduleConfigs, IntoSystem, Res, Resource,
+    SystemInput,
+};
+use std::marker::PhantomData;
 
 pub trait EventFlow {
     fn add_event_flow<R, Rs, M>(
@@ -37,9 +41,13 @@ impl EventFlow for App {
     {
         self.add_event::<R>();
         self.add_event::<Rs>();
+        self.init_resource::<EventHandlers<R, Rs>>();
         let id = self.register_system(handler.pipe(send_response::<Rs>));
-        self.insert_resource(EventHandlerId { id });
-        self.add_systems(label, process_event::<R>);
+        self.world_mut()
+            .resource_mut::<EventHandlers<R, Rs>>()
+            .ids
+            .push(id);
+        self.add_systems(label, process_event::<R, Rs>);
         self
     }
 
@@ -55,30 +63,52 @@ impl EventFlow for App {
     {
         self.add_event::<R>();
         self.add_event::<Rs>();
+        self.init_resource::<EventHandlers<R, Rs>>();
         let id = self.register_system(handler.pipe(send_response::<Rs>));
-        self.insert_resource(EventHandlerId { id });
-        self.add_systems(label, process_event::<R>.after(process_event::<P>));
+        self.world_mut()
+            .resource_mut::<EventHandlers<R, Rs>>()
+            .ids
+            .push(id);
+        self.add_systems(label, process_event::<R, Rs>.after(process_event::<P, R>));
         self
     }
 }
 
 #[derive(Resource)]
-struct EventHandlerId<R>
+struct EventHandlers<R, Rs>
 where
     R: Request + SystemInput,
+    Rs: Event,
 {
-    id: SystemId<R, ()>,
+    ids: Vec<SystemId<R, ()>>,
+    _marker: PhantomData<Rs>,
 }
 
-fn process_event<R>(
+impl<R, Rs> Default for EventHandlers<R, Rs>
+where
+    R: Request + SystemInput,
+    Rs: Event,
+{
+    fn default() -> Self {
+        EventHandlers {
+            ids: vec![],
+            _marker: PhantomData::default(),
+        }
+    }
+}
+
+fn process_event<R, Rs>(
     mut reader: EventReader<R>,
-    handler: Res<EventHandlerId<R>>,
+    handler: Res<EventHandlers<R, Rs>>,
     mut commands: Commands,
 ) where
     R: Request + SystemInput<Inner<'static> = R>,
+    Rs: Event,
 {
-    for event in reader.read().cloned() {
-        commands.run_system_with(handler.id, event)
+    for event in reader.read() {
+        for id in &handler.ids {
+            commands.run_system_with(*id, event.clone())
+        }
     }
 }
 
