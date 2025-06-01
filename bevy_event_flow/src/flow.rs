@@ -3,8 +3,8 @@ use bevy::app::App;
 use bevy::ecs::schedule::ScheduleLabel;
 use bevy::ecs::system::SystemId;
 use bevy::prelude::{
-    Commands, Event, EventReader, EventWriter, In, IntoScheduleConfigs, IntoSystem, Res, Resource,
-    SystemInput,
+    Commands, Event, EventWriter, Events, In, IntoScheduleConfigs, IntoSystem, Res, ResMut,
+    Resource, SystemInput,
 };
 use std::marker::PhantomData;
 
@@ -27,6 +27,23 @@ pub trait EventFlow {
         R: Request + SystemInput<Inner<'static> = R>,
         Rs: Event,
         P: Request + SystemInput<Inner<'static> = P>;
+
+    fn add_event_handler<R, M>(
+        &mut self,
+        label: impl ScheduleLabel,
+        handler: impl IntoSystem<R, (), M> + 'static,
+    ) -> &mut Self
+    where
+        R: Request + SystemInput<Inner<'static> = R>;
+
+    fn add_event_handler_after<P, R, M>(
+        &mut self,
+        label: impl ScheduleLabel,
+        handler: impl IntoSystem<R, (), M> + 'static,
+    ) -> &mut Self
+    where
+        R: Request + SystemInput<Inner<'static> = R>,
+        P: Request + SystemInput<Inner<'static> = P>;
 }
 
 impl EventFlow for App {
@@ -41,10 +58,10 @@ impl EventFlow for App {
     {
         self.add_event::<R>();
         self.add_event::<Rs>();
-        self.init_resource::<EventHandlers<R, Rs>>();
+        self.init_resource::<EventProcessors<R, Rs>>();
         let id = self.register_system(handler.pipe(send_response::<Rs>));
         self.world_mut()
-            .resource_mut::<EventHandlers<R, Rs>>()
+            .resource_mut::<EventProcessors<R, Rs>>()
             .ids
             .push(id);
         self.add_systems(label, process_event::<R, Rs>);
@@ -63,19 +80,58 @@ impl EventFlow for App {
     {
         self.add_event::<R>();
         self.add_event::<Rs>();
-        self.init_resource::<EventHandlers<R, Rs>>();
+        self.init_resource::<EventProcessors<R, Rs>>();
         let id = self.register_system(handler.pipe(send_response::<Rs>));
         self.world_mut()
-            .resource_mut::<EventHandlers<R, Rs>>()
+            .resource_mut::<EventProcessors<R, Rs>>()
             .ids
             .push(id);
         self.add_systems(label, process_event::<R, Rs>.after(process_event::<P, R>));
         self
     }
+
+    fn add_event_handler<R, M>(
+        &mut self,
+        label: impl ScheduleLabel,
+        handler: impl IntoSystem<R, (), M> + 'static,
+    ) -> &mut Self
+    where
+        R: Request + SystemInput<Inner<'static> = R>,
+    {
+        self.add_event::<R>();
+        self.init_resource::<EventHandlers<R>>();
+        let id = self.register_system(handler);
+        self.world_mut()
+            .resource_mut::<EventHandlers<R>>()
+            .ids
+            .push(id);
+        self.add_systems(label, handle_event::<R>);
+        self
+    }
+
+    fn add_event_handler_after<P, R, M>(
+        &mut self,
+        label: impl ScheduleLabel,
+        handler: impl IntoSystem<R, (), M> + 'static,
+    ) -> &mut Self
+    where
+        R: Request + SystemInput<Inner<'static> = R>,
+        P: Request + SystemInput<Inner<'static> = P>,
+    {
+        self.add_event::<R>();
+        self.init_resource::<EventHandlers<R>>();
+        let id = self.register_system(handler);
+        self.world_mut()
+            .resource_mut::<EventHandlers<R>>()
+            .ids
+            .push(id);
+        self.add_systems(label, handle_event::<R>.after(process_event::<P, R>));
+        self
+    }
 }
 
 #[derive(Resource)]
-struct EventHandlers<R, Rs>
+struct EventProcessors<R, Rs>
 where
     R: Request + SystemInput,
     Rs: Event,
@@ -84,28 +140,45 @@ where
     _marker: PhantomData<Rs>,
 }
 
-impl<R, Rs> Default for EventHandlers<R, Rs>
+impl<R, Rs> Default for EventProcessors<R, Rs>
 where
     R: Request + SystemInput,
     Rs: Event,
 {
     fn default() -> Self {
-        EventHandlers {
+        EventProcessors {
             ids: vec![],
             _marker: PhantomData::default(),
         }
     }
 }
 
+#[derive(Resource)]
+struct EventHandlers<R>
+where
+    R: Request + SystemInput,
+{
+    ids: Vec<SystemId<R, ()>>,
+}
+
+impl<R> Default for EventHandlers<R>
+where
+    R: Request + SystemInput,
+{
+    fn default() -> Self {
+        EventHandlers { ids: vec![] }
+    }
+}
+
 fn process_event<R, Rs>(
-    mut reader: EventReader<R>,
-    handler: Res<EventHandlers<R, Rs>>,
+    mut reader: ResMut<Events<R>>,
+    handler: Res<EventProcessors<R, Rs>>,
     mut commands: Commands,
 ) where
     R: Request + SystemInput<Inner<'static> = R>,
     Rs: Event,
 {
-    for event in reader.read() {
+    for event in reader.drain() {
         for id in &handler.ids {
             commands.run_system_with(*id, event.clone())
         }
@@ -117,4 +190,18 @@ where
     Rs: Event,
 {
     writer.write(response);
+}
+
+fn handle_event<R>(
+    mut reader: ResMut<Events<R>>,
+    handler: Res<EventHandlers<R>>,
+    mut commands: Commands,
+) where
+    R: Request + SystemInput<Inner<'static> = R>,
+{
+    for event in reader.drain() {
+        for id in &handler.ids {
+            commands.run_system_with(*id, event.clone())
+        }
+    }
 }
