@@ -1,57 +1,61 @@
 use bevy::ecs::schedule::ScheduleLabel;
 use bevy::ecs::system::SystemId;
-use bevy::prelude::{App, Commands, Event, EventReader, EventWriter, In, IntoScheduleConfigs, IntoSystem, Res, Resource};
+use bevy::prelude::{App, Commands, EventReader, EventWriter, In, IntoScheduleConfigs, IntoSystem, Res, Resource, SystemInput};
+
+pub trait Request: bevy::prelude::Event + Clone {
+    type Response: bevy::prelude::Event;
+}
 
 pub trait EventFlow {
-    fn add_event_flow<Request, M>(
+    fn add_event_flow<R, M>(
         &mut self,
         label: impl ScheduleLabel,
-        handler: impl IntoSystem<In<Request>, Request::Response, M> + 'static,
+        handler: impl IntoSystem<R, R::Response, M> + 'static,
     ) -> &mut Self
     where
-        Request: crate::Request;
+        R: Request + SystemInput<Inner<'static> =R>;
 
-    fn add_event_flow_after<Request, Prior, M>(
+    fn add_event_flow_after<R, P, M>(
         &mut self,
         label: impl ScheduleLabel,
-        handler: impl IntoSystem<In<Request>, Request::Response, M> + 'static,
+        handler: impl IntoSystem<R, R::Response, M> + 'static,
     ) -> &mut Self
     where
-        Request: crate::Request,
-        Prior: crate::Request<Response = Request>;
+        R: Request + SystemInput<Inner<'static> =R>,
+        P: Request<Response =R> + SystemInput<Inner<'static> =P>;
 }
 
 impl EventFlow for App {
-    fn add_event_flow<Request, M>(
+    fn add_event_flow<R, M>(
         &mut self,
         label: impl ScheduleLabel,
-        handler: impl IntoSystem<In<Request>, Request::Response, M> + 'static,
+        handler: impl IntoSystem<R, R::Response, M> + 'static,
     ) -> &mut Self
     where
-        Request: crate::Request,
+        R: Request + SystemInput<Inner<'static> =R>,
     {
-        self.add_event::<Request>();
-        self.add_event::<Request::Response>();
-        let id = self.register_system(handler.pipe(send_response::<Request>));
+        self.add_event::<R>();
+        self.add_event::<R::Response>();
+        let id = self.register_system(handler.pipe(send_response::<R>));
         self.insert_resource(EventHandlerId { id });
-        self.add_systems(label, process_event::<Request>);
+        self.add_systems(label, process_event::<R>);
         self
     }
 
-    fn add_event_flow_after<Request, Prior, M>(
+    fn add_event_flow_after<R, P, M>(
         &mut self,
         label: impl ScheduleLabel,
-        handler: impl IntoSystem<In<Request>, Request::Response, M> + 'static,
+        handler: impl IntoSystem<R, R::Response, M> + 'static,
     ) -> &mut Self
     where
-        Request: crate::Request,
-        Prior: crate::Request<Response = Request>,
+        R: Request + SystemInput<Inner<'static> =R>,
+        P: Request<Response =R> + SystemInput<Inner<'static> =P>,
     {
-        self.add_event::<Request>();
-        self.add_event::<Request::Response>();
-        let id = self.register_system(handler.pipe(send_response::<Request>));
+        self.add_event::<R>();
+        self.add_event::<R::Response>();
+        let id = self.register_system(handler.pipe(send_response::<R>));
         self.insert_resource(EventHandlerId { id });
-        self.add_systems(label, process_event::<Request>.after(process_event::<Prior>));
+        self.add_systems(label, process_event::<R>.after(process_event::<P>));
         self
     }
 }
@@ -59,13 +63,9 @@ impl EventFlow for App {
 #[derive(Resource)]
 struct EventHandlerId<R>
 where
-    R: Request,
+    R: Request + SystemInput,
 {
-    id: SystemId<In<R>, ()>,
-}
-
-pub trait Request: Event + Clone {
-    type Response: Event;
+    id: SystemId<R, ()>,
 }
 
 fn process_event<R>(
@@ -73,7 +73,7 @@ fn process_event<R>(
     handler: Res<EventHandlerId<R>>,
     mut commands: Commands,
 ) where
-    R: Request,
+    R: Request + SystemInput<Inner<'static> = R>,
 {
     for event in reader.read().cloned() {
         commands.run_system_with(handler.id, event)

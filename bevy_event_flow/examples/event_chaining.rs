@@ -1,19 +1,18 @@
 use bevy::app::{App, PostUpdate, Update};
-use bevy::prelude::{Component, Event, EventReader, In, IntoScheduleConfigs, Query};
+use bevy::prelude::{Component, Event, EventReader, IntoScheduleConfigs, Query, SystemInput};
 use bevy_event_flow::EventFlow;
+use bevy_event_flow_macros::Request;
 
-#[derive(Event, Clone)]
+#[derive(Request, Event, Clone)]
+#[response(Response)]
 struct Request {
     to: String,
 }
 
-#[derive(Event, Clone)]
+#[derive(Request, Event, Clone)]
+#[response(ResponseBack)]
 struct Response {
     message: String,
-}
-
-impl bevy_event_flow::Request for Request {
-    type Response = Response;
 }
 
 #[derive(Event)]
@@ -22,30 +21,26 @@ struct ResponseBack {
     message: String,
 }
 
-impl bevy_event_flow::Request for Response {
-    type Response = ResponseBack;
-}
-
 #[derive(Component)]
 #[allow(dead_code)]
 struct Health(usize);
 
-fn handle_request(In(Request { to }): In<Request>, _query: Query<&mut Health>) -> Response {
+fn handle_request(Request { to }: Request, _query: Query<&mut Health>) -> Response {
     println!("Handling request ...");
     Response {
         message: format!("Hello, {to}!",),
     }
 }
 
-fn handle_response(In(_response): In<Response>) -> ResponseBack {
-    println!("Handling request ...");
+fn handle_response(_response: Response) -> ResponseBack {
+    println!("Handling response ...");
     ResponseBack {
         message: "Hello, back!".to_string(),
     }
 }
 
 fn read_response(mut reader: EventReader<Response>) {
-    println!("Trying to read response.");
+    println!("Handling response back ...");
     for Response { message } in reader.read() {
         println!("{}", message)
     }
@@ -58,22 +53,7 @@ fn read_response_back(mut reader: EventReader<ResponseBack>) {
     }
 }
 
-#[test]
-fn request() {
-    let mut app = App::new();
-    app.add_event_flow(Update, handle_request)
-        .add_systems(PostUpdate, read_response);
-    app.world_mut().commands().send_event(Request {
-        to: "Vicky".to_string(),
-    });
-    app.world_mut().commands().send_event(Request {
-        to: "Luna".to_string(),
-    });
-    app.update();
-}
-
-#[test]
-fn request_after() {
+fn main() {
     let mut app = App::new();
     app.add_event_flow(Update, handle_request)
         .add_event_flow_after::<Response, Request, _>(Update, handle_response)

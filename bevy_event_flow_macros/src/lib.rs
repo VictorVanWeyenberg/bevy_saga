@@ -1,26 +1,33 @@
 use proc_macro::TokenStream;
+use proc_macro2::Ident;
 use quote::quote;
 use syn::DeriveInput;
 
-#[derive(deluxe::ExtractAttributes)]
-#[deluxe(attributes(metadata))]
-struct DeriveBevyRequestExtractAttributes {
-    type_: String,
-}
+#[derive(deluxe::ExtractAttributes, Debug)]
+#[deluxe(attributes(response))]
+struct DeriveBevyRequestExtractAttributes(Ident);
 
 fn derive_bevy_request2(input: proc_macro2::TokenStream) -> deluxe::Result<proc_macro2::TokenStream> {
     let mut ast: DeriveInput = syn::parse2(input)?;
-    let DeriveBevyRequestExtractAttributes { type_ } = deluxe::extract_attributes(&mut ast)?;
+    let DeriveBevyRequestExtractAttributes(response) = deluxe::extract_attributes(&mut ast)?;
     let ident = &ast.ident;
-    let (impl_generics, type_generics, where_clause) = ast.generics.split_for_impl();
     Ok(quote! {
-        impl #impl_generics BevyRequest for #ident #type_generics #where_clause {
-            type BevyResponse = #type_
+        impl bevy_event_flow::Request for #ident {
+            type Response = #response;
+        }
+
+        impl SystemInput for #ident {
+            type Param<'i> = #ident;
+            type Inner<'i> = #ident;
+
+            fn wrap(this: Self::Inner<'_>) -> Self::Param<'_> {
+                this
+            }
         }
     })
 }
 
-#[proc_macro_derive(BevyRequest, attributes(response))]
+#[proc_macro_derive(Request, attributes(response))]
 pub fn derive_bevy_request(input: TokenStream) -> TokenStream {
     derive_bevy_request2(input.into()).unwrap().into()
 }
