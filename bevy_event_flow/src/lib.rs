@@ -4,6 +4,4 @@ mod flow;
 
 pub use flow::EventFlow;
 
-pub trait Request: bevy::prelude::Event + Clone {
-    type Response: bevy::prelude::Event;
-}
+pub trait Request: Event + Clone + SystemInput {}

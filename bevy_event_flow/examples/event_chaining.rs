@@ -1,18 +1,14 @@
 use bevy::app::{App, PostUpdate, Update};
-use bevy::prelude::{
-    Component, Entity, Event, EventReader, IntoScheduleConfigs, Query, SystemInput,
-};
+use bevy::prelude::{Component, Entity, Event, EventReader, IntoScheduleConfigs, Query};
 use bevy_event_flow::EventFlow;
 use bevy_event_flow_macros::Request;
 
 #[derive(Request, Event, Clone)]
-#[response(Intermediary)]
 struct Input {
     entity: Entity,
 }
 
 #[derive(Request, Event, Clone)]
-#[response(Output)]
 enum Intermediary {
     Ok { entity: Entity },
     Err { message: String },
@@ -54,7 +50,7 @@ fn handle_intermediary(response: Intermediary, mut query: Query<(&Name, &mut Hea
                 }
             }
         }
-        Intermediary::Err { message } => Output::Err { message }
+        Intermediary::Err { message } => Output::Err { message },
     }
 }
 
@@ -66,17 +62,17 @@ fn read_intermediary(mut reader: EventReader<Intermediary>) {
     }
 }
 
-fn read_output(mut reader: EventReader<Output>, query: Query<&Name>) {
+fn read_output(mut reader: EventReader<Output>, query: Query<(&Name, &Health)>) {
     for output in reader.read() {
         match output {
             Output::Ok { entity } => {
-                if let Ok(Name(name)) = query.get(entity.clone()) {
-                    println!("Done processing damage for {name}.")
+                if let Ok((Name(name), Health(health))) = query.get(entity.clone()) {
+                    println!("Player {name} now has {health} health.")
                 } else {
                     println!("System read_output query could not be fulfilled.")
                 }
             }
-            Output::Err { message } => println!("{}", message)
+            Output::Err { message } => println!("{}", message),
         }
     }
 }
@@ -84,7 +80,7 @@ fn read_output(mut reader: EventReader<Output>, query: Query<&Name>) {
 fn main() {
     let mut app = App::new();
     app.add_event_flow(Update, handle_input)
-        .add_event_flow_after::<Intermediary, Input, _>(Update, handle_intermediary)
+        .add_event_flow_after::<Input, _, _, _>(Update, handle_intermediary)
         .add_systems(
             PostUpdate,
             (read_intermediary, read_output.after(read_intermediary)),

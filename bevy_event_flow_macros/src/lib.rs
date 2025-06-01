@@ -1,22 +1,15 @@
 use proc_macro::TokenStream;
-use proc_macro2::Ident;
 use quote::quote;
 use syn::DeriveInput;
 
-#[derive(deluxe::ExtractAttributes, Debug)]
-#[deluxe(attributes(response))]
-struct DeriveBevyRequestExtractAttributes(Ident);
-
 fn derive_bevy_request2(input: proc_macro2::TokenStream) -> deluxe::Result<proc_macro2::TokenStream> {
-    let mut ast: DeriveInput = syn::parse2(input)?;
-    let DeriveBevyRequestExtractAttributes(response) = deluxe::extract_attributes(&mut ast)?;
+    let ast: DeriveInput = syn::parse2(input)?;
     let ident = &ast.ident;
     Ok(quote! {
         impl bevy_event_flow::Request for #ident {
-            type Response = #response;
         }
 
-        impl SystemInput for #ident {
+        impl bevy::prelude::SystemInput for #ident {
             type Param<'i> = #ident;
             type Inner<'i> = #ident;
 
@@ -27,7 +20,7 @@ fn derive_bevy_request2(input: proc_macro2::TokenStream) -> deluxe::Result<proc_
     })
 }
 
-#[proc_macro_derive(Request, attributes(response))]
+#[proc_macro_derive(Request)]
 pub fn derive_bevy_request(input: TokenStream) -> TokenStream {
     derive_bevy_request2(input.into()).unwrap().into()
 }

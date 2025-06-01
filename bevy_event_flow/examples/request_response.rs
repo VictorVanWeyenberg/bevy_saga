@@ -1,10 +1,9 @@
 use bevy::app::{App, PostUpdate, Update};
-use bevy::prelude::{Event, EventReader, SystemInput};
+use bevy::prelude::{Event, EventReader};
 use bevy_event_flow::EventFlow;
 use bevy_event_flow_macros::Request;
 
-#[derive(Request, Event, Clone)]
-#[response(Response)]
+#[derive(Clone, Event, Request)]
 struct Request {
     to: String,
 }
