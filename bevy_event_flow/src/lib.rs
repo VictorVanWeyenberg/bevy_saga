@@ -1,27 +1,57 @@
 use bevy::ecs::schedule::ScheduleLabel;
 use bevy::ecs::system::SystemId;
-use bevy::prelude::{App, Commands, Event, EventReader, EventWriter, In, IntoSystem, Res, Resource};
+use bevy::prelude::{App, Commands, Event, EventReader, EventWriter, In, IntoScheduleConfigs, IntoSystem, Res, Resource};
 
 pub trait EventFlow {
-    fn add_request<M, R, H, L>(&mut self, label: L, handler: H) -> &mut Self
+    fn add_event_flow<Request, M>(
+        &mut self,
+        label: impl ScheduleLabel,
+        handler: impl IntoSystem<In<Request>, Request::Response, M> + 'static,
+    ) -> &mut Self
     where
-        R: Request,
-        H: IntoSystem<In<R>, R::Response, M> + 'static,
-        L: ScheduleLabel;
+        Request: crate::Request;
+
+    fn add_event_flow_after<Request, Prior, M>(
+        &mut self,
+        label: impl ScheduleLabel,
+        handler: impl IntoSystem<In<Request>, Request::Response, M> + 'static,
+    ) -> &mut Self
+    where
+        Request: crate::Request,
+        Prior: crate::Request<Response = Request>;
 }
 
 impl EventFlow for App {
-    fn add_request<M, R, H, L>(&mut self, label: L, handler: H) -> &mut Self
+    fn add_event_flow<Request, M>(
+        &mut self,
+        label: impl ScheduleLabel,
+        handler: impl IntoSystem<In<Request>, Request::Response, M> + 'static,
+    ) -> &mut Self
     where
-        R: Request,
-        H: IntoSystem<In<R>, R::Response, M> + 'static,
-        L: ScheduleLabel,
+        Request: crate::Request,
     {
-        self.add_event::<R>();
-        self.add_event::<R::Response>();
-        let id = self.register_system(handler.pipe(send_response::<R>));
+        self.add_event::<Request>();
+        self.add_event::<Request::Response>();
+        let id = self.register_system(handler.pipe(send_response::<Request>));
         self.insert_resource(EventHandlerId { id });
-        self.add_systems(label, process_event::<R>);
+        self.add_systems(label, process_event::<Request>);
+        self
+    }
+
+    fn add_event_flow_after<Request, Prior, M>(
+        &mut self,
+        label: impl ScheduleLabel,
+        handler: impl IntoSystem<In<Request>, Request::Response, M> + 'static,
+    ) -> &mut Self
+    where
+        Request: crate::Request,
+        Prior: crate::Request<Response = Request>,
+    {
+        self.add_event::<Request>();
+        self.add_event::<Request::Response>();
+        let id = self.register_system(handler.pipe(send_response::<Request>));
+        self.insert_resource(EventHandlerId { id });
+        self.add_systems(label, process_event::<Request>.after(process_event::<Prior>));
         self
     }
 }
