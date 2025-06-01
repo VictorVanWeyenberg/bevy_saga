@@ -1,6 +1,9 @@
 use bevy::ecs::schedule::ScheduleLabel;
 use bevy::ecs::system::SystemId;
-use bevy::prelude::{App, Commands, EventReader, EventWriter, In, IntoScheduleConfigs, IntoSystem, Res, Resource, SystemInput};
+use bevy::prelude::{
+    App, Commands, EventReader, EventWriter, In, IntoScheduleConfigs, IntoSystem, Res, Resource,
+    SystemInput,
+};
 
 pub trait Request: bevy::prelude::Event + Clone {
     type Response: bevy::prelude::Event;
@@ -13,7 +16,7 @@ pub trait EventFlow {
         handler: impl IntoSystem<R, R::Response, M> + 'static,
     ) -> &mut Self
     where
-        R: Request + SystemInput<Inner<'static> =R>;
+        R: Request + SystemInput<Inner<'static> = R>;
 
     fn add_event_flow_after<R, P, M>(
         &mut self,
@@ -21,8 +24,8 @@ pub trait EventFlow {
         handler: impl IntoSystem<R, R::Response, M> + 'static,
     ) -> &mut Self
     where
-        R: Request + SystemInput<Inner<'static> =R>,
-        P: Request<Response =R> + SystemInput<Inner<'static> =P>;
+        R: Request + SystemInput<Inner<'static> = R>,
+        P: Request<Response = R> + SystemInput<Inner<'static> = P>;
 }
 
 impl EventFlow for App {
@@ -32,7 +35,7 @@ impl EventFlow for App {
         handler: impl IntoSystem<R, R::Response, M> + 'static,
     ) -> &mut Self
     where
-        R: Request + SystemInput<Inner<'static> =R>,
+        R: Request + SystemInput<Inner<'static> = R>,
     {
         self.add_event::<R>();
         self.add_event::<R::Response>();
@@ -48,8 +51,8 @@ impl EventFlow for App {
         handler: impl IntoSystem<R, R::Response, M> + 'static,
     ) -> &mut Self
     where
-        R: Request + SystemInput<Inner<'static> =R>,
-        P: Request<Response =R> + SystemInput<Inner<'static> =P>,
+        R: Request + SystemInput<Inner<'static> = R>,
+        P: Request<Response = R> + SystemInput<Inner<'static> = P>,
     {
         self.add_event::<R>();
         self.add_event::<R::Response>();
