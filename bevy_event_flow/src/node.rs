@@ -1,3 +1,4 @@
+use bevy::ecs::system::SystemParam;
 use bevy::prelude::SystemInput;
 
 trait EventProcessor<Marker>: Sized {
@@ -38,6 +39,8 @@ where
     }
 }
 
+// region Function implementations.
+
 impl<Input, Intermediary, Func> EventProcessor<fn(Input) -> Intermediary> for Func
 where
     Func: Send + Sync + 'static,
@@ -56,11 +59,53 @@ where
     }
 }
 
+impl<Input, Intermediary, Func, P1> EventProcessor<fn(Input, P1) -> Intermediary> for Func
+where
+    Func: Send + Sync + 'static,
+    for <'a> &'a mut Func: FnMut(Input, P1) -> Intermediary + FnMut(<Input as SystemInput>::Param<'_>, <P1 as SystemParam>::Item<'_, '_>) -> Intermediary,
+    Input: SystemInput + 'static,
+    P1: SystemParam,
+    Intermediary: 'static,
+{
+    type Input = Input;
+    type Intermediary = Intermediary;
+
+    fn then<Processor, Output, NextMarker>(self, next: Processor) -> Link<Self, Processor>
+    where
+        Processor: EventProcessor<NextMarker>
+    {
+        Link::new(self, next)
+    }
+}
+
+impl<Input, Intermediary, Func, P1, P2> EventProcessor<fn(Input, P1, P2) -> Intermediary> for Func
+where
+    Func: Send + Sync + 'static,
+    for <'a> &'a mut Func: FnMut(Input, P1, P2) -> Intermediary + FnMut(<Input as SystemInput>::Param<'_>, <P1 as SystemParam>::Item<'_, '_>, <P2 as SystemParam>::Item<'_, '_>) -> Intermediary,
+    Input: SystemInput + 'static,
+    P1: SystemParam,
+    P2: SystemParam,
+    Intermediary: 'static,
+{
+    type Input = Input;
+    type Intermediary = Intermediary;
+
+    fn then<Processor, Output, NextMarker>(self, next: Processor) -> Link<Self, Processor>
+    where
+        Processor: EventProcessor<NextMarker>
+    {
+        Link::new(self, next)
+    }
+}
+
+// endregion
+
 #[cfg(test)]
 mod tests {
     use crate::node::EventProcessor;
-    use bevy::prelude::SystemInput;
+    use bevy::prelude::{Component, Query, SystemInput};
 
+    #[derive(Component)]
     struct A;
 
     impl SystemInput for A {
@@ -76,11 +121,11 @@ mod tests {
         A
     }
 
-    fn b(_b: A) -> A {
+    fn b(_b: A, _query: Query<&A>) -> A {
         A
     }
 
-    fn c(_c: A) -> A {
+    fn c(_c: A, _query1: Query<&A>, _query2: Query<&A>) -> A {
         A
     }
 
