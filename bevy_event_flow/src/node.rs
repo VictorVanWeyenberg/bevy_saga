@@ -41,7 +41,8 @@ where
 impl<Input, Intermediary, Func> EventProcessor<fn(Input) -> Intermediary> for Func
 where
     Func: Send + Sync + 'static,
-    for <'a> &'a mut Func: FnMut(Input) -> Intermediary,
+    for <'a> &'a mut Func: FnMut(Input) -> Intermediary + FnMut(<Input as SystemInput>::Param<'_>) -> Intermediary,
+    Input: SystemInput + 'static,
     Intermediary: 'static,
 {
     type Input = Input;
@@ -57,19 +58,30 @@ where
 
 #[cfg(test)]
 mod tests {
-    use bevy::prelude::In;
     use crate::node::EventProcessor;
+    use bevy::prelude::SystemInput;
 
-    fn a(_a: u8) -> u16 {
-        1
+    struct A;
+
+    impl SystemInput for A {
+        type Param<'i> = A;
+        type Inner<'i> = A;
+
+        fn wrap(this: Self::Inner<'_>) -> Self::Param<'_> {
+            this
+        }
     }
 
-    fn b(_b: u16) -> u32 {
-        1
+    fn a(_a: A) -> A {
+        A
     }
 
-    fn c(_c: u32) -> u64 {
-        1
+    fn b(_b: A) -> A {
+        A
+    }
+
+    fn c(_c: A) -> A {
+        A
     }
 
     #[test]
