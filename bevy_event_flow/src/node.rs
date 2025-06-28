@@ -100,6 +100,26 @@ where
 
 // endregion
 
+// region Tuple implementations
+
+impl<Input, Intermediary, Marker1, Marker2, E1, E2> EventProcessor<(Marker1, Marker2)> for (E1, E2)
+where
+    E1: EventProcessor<Marker1, Input = Input, Intermediary = Intermediary>,
+    E2: EventProcessor<Marker2, Input = Input, Intermediary = Intermediary>,
+{
+    type Input = Input;
+    type Intermediary = Intermediary;
+
+    fn then<Processor, Output, NextMarker>(self, next: Processor) -> Link<Self, Processor>
+    where
+        Processor: EventProcessor<NextMarker, Input=Self::Intermediary, Intermediary=Output>
+    {
+        Link::new(self, next)
+    }
+}
+
+//endregion
+
 #[cfg(test)]
 mod tests {
     use crate::node::EventProcessor;
@@ -121,7 +141,11 @@ mod tests {
         A
     }
 
-    fn b(_b: A, _query: Query<&A>) -> A {
+    fn b1(_b: A, _query: Query<&A>) -> A {
+        A
+    }
+
+    fn b2(_b: A, _query1: Query<&A>, _query2: Query<&A>) -> A {
         A
     }
 
@@ -131,6 +155,6 @@ mod tests {
 
     #[test]
     fn test() {
-        let linked = a.then(b).then(c);
+        let linked = a.then((b1, b2)).then(c);
     }
 }
