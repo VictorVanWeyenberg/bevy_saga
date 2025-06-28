@@ -1,39 +1,55 @@
 use bevy::ecs::system::SystemParam;
 use bevy::prelude::SystemInput;
+use std::marker::PhantomData;
 
-trait EventProcessor<Marker>: Sized {
+pub trait EventProcessor<Marker>: Sized {
 
     type Input;
     type Intermediary;
 
-    fn then<Processor, Output, NextMarker>(self, next: Processor) -> Link<Self, Processor>
+    fn then<Processor, Output, NextMarker>(self, next: Processor) -> Link<Self, Processor, Marker, NextMarker>
     where
         Processor: EventProcessor<NextMarker, Input = Self::Intermediary, Intermediary = Output>;
 
 }
 
-struct Link<A, B> {
+pub struct Link<A, B, MarkerA, MarkerB>
+where
+    A: EventProcessor<MarkerA, Intermediary = B::Input>,
+    B: EventProcessor<MarkerB>,
+    MarkerA: 'static,
+    MarkerB: 'static,
+{
     a: A,
     b: B,
+    _phantom: PhantomData<(MarkerA, MarkerB)>
 }
 
-impl<A, B> Link<A, B> {
+impl<A, B, MarkerA, MarkerB> Link<A, B, MarkerA, MarkerB>
+where
+    A: EventProcessor<MarkerA, Intermediary = B::Input>,
+    B: EventProcessor<MarkerB>,
+    MarkerA: 'static,
+    MarkerB: 'static,
+{
     fn new(a: A, b: B) -> Self {
-        Link { a, b }
+        Link { a, b, _phantom: PhantomData }
     }
 }
 
-impl<InputA, Intermediary, MarkerA, MarkerB, A, B> EventProcessor<(MarkerA, MarkerB)> for Link<A, B>
+impl<InputA, Intermediary, MarkerA, MarkerB, A, B> EventProcessor<(MarkerA, MarkerB)> for Link<A, B, MarkerA, MarkerB>
 where
-    A: EventProcessor<MarkerA, Input = InputA>,
+    A: EventProcessor<MarkerA, Input = InputA, Intermediary = B::Input>,
     B: EventProcessor<MarkerB, Intermediary = Intermediary>,
+    MarkerA: 'static,
+    MarkerB: 'static,
 {
     type Input = InputA;
     type Intermediary = Intermediary;
 
-    fn then<Processor, Output, NextMarker>(self, next: Processor) -> Link<Self, Processor>
+    fn then<Processor, Output, NextMarker>(self, next: Processor) -> Link<Self, Processor, (MarkerA, MarkerB), NextMarker>
     where
-        Processor: EventProcessor<NextMarker>
+        Processor: EventProcessor<NextMarker, Input = Self::Intermediary>
     {
         Link::new(self, next)
     }
@@ -51,9 +67,9 @@ where
     type Input = Input;
     type Intermediary = Intermediary;
 
-    fn then<Processor, Output, NextMarker>(self, next: Processor) -> Link<Self, Processor>
+    fn then<Processor, Output, NextMarker>(self, next: Processor) -> Link<Self, Processor, fn(Input) -> Intermediary, NextMarker>
     where
-        Processor: EventProcessor<NextMarker>
+        Processor: EventProcessor<NextMarker, Input = Self::Intermediary>,
     {
         Link::new(self, next)
     }
@@ -70,9 +86,9 @@ where
     type Input = Input;
     type Intermediary = Intermediary;
 
-    fn then<Processor, Output, NextMarker>(self, next: Processor) -> Link<Self, Processor>
+    fn then<Processor, Output, NextMarker>(self, next: Processor) -> Link<Self, Processor, fn(Input, P1) -> Intermediary, NextMarker>
     where
-        Processor: EventProcessor<NextMarker>
+        Processor: EventProcessor<NextMarker, Input = Self::Intermediary>
     {
         Link::new(self, next)
     }
@@ -90,9 +106,9 @@ where
     type Input = Input;
     type Intermediary = Intermediary;
 
-    fn then<Processor, Output, NextMarker>(self, next: Processor) -> Link<Self, Processor>
+    fn then<Processor, Output, NextMarker>(self, next: Processor) -> Link<Self, Processor, fn(Input, P1, P2) -> Intermediary, NextMarker>
     where
-        Processor: EventProcessor<NextMarker>
+        Processor: EventProcessor<NextMarker, Input = Self::Intermediary>
     {
         Link::new(self, next)
     }
@@ -110,9 +126,9 @@ where
     type Input = Input;
     type Intermediary = Intermediary;
 
-    fn then<Processor, Output, NextMarker>(self, next: Processor) -> Link<Self, Processor>
+    fn then<Processor, Output, NextMarker>(self, next: Processor) -> Link<Self, Processor, (Marker1, Marker2), NextMarker>
     where
-        Processor: EventProcessor<NextMarker, Input=Self::Intermediary, Intermediary=Output>
+        Processor: EventProcessor<NextMarker, Input=Self::Intermediary>
     {
         Link::new(self, next)
     }
@@ -153,8 +169,10 @@ mod tests {
         A
     }
 
+    fn d(_a: A) {}
+
     #[test]
     fn test() {
-        let linked = a.then((b1, b2)).then(c);
+        let _linked = a.then((b1, b2)).then(c).then(d);
     }
 }
