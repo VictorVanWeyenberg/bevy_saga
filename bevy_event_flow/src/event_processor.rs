@@ -92,4 +92,21 @@ where
     }
 }
 
+impl<Input, Intermediary, Marker1, Marker2, Marker3, E1, E2, E3> EventProcessor<(Marker1, Marker2, Marker3)> for (E1, E2, E3)
+where
+    E1: EventProcessor<Marker1, Input = Input, Intermediary = Intermediary>,
+    E2: EventProcessor<Marker2, Input = Input, Intermediary = Intermediary>,
+    E3: EventProcessor<Marker3, Input = Input, Intermediary = Intermediary>,
+{
+    type Input = Input;
+    type Intermediary = Intermediary;
+
+    fn then<Processor, Output, NextMarker>(self, next: Processor) -> Link<Self, Processor, (Marker1, Marker2, Marker3), NextMarker>
+    where
+        Processor: EventProcessor<NextMarker, Input=Self::Intermediary>
+    {
+        Link::new(self, next)
+    }
+}
+
 //endregion
