@@ -1,6 +1,6 @@
-use bevy::app::{App, PostUpdate, Update};
-use bevy::prelude::{Event, EventReader};
-use bevy_event_flow::EventFlow;
+use bevy::app::{App, Update};
+use bevy::prelude::Event;
+use bevy_event_flow::RegisterEventFlow;
 use bevy_event_flow_macros::Request;
 
 #[derive(Clone, Event, Request)]
@@ -8,7 +8,7 @@ struct Request {
     to: String,
 }
 
-#[derive(Event)]
+#[derive(Request, Event, Clone)]
 struct Response {
     message: String,
 }
@@ -19,16 +19,13 @@ fn handle_request(Request { to }: Request) -> Response {
     }
 }
 
-fn read_response(mut reader: EventReader<Response>) {
-    for Response { message } in reader.read() {
-        println!("{}", message)
-    }
+fn read_response(Response { message }: Response) {
+    println!("{}", message)
 }
 
 fn main() {
     let mut app = App::new();
-    app.add_event_flow(Update, handle_request)
-        .add_systems(PostUpdate, read_response);
+    app.add_event_processor_flow(Update, (handle_request, read_response));
     app.world_mut().commands().send_event(Request {
         to: "Victor".to_string(),
     });

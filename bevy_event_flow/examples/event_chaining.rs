@@ -1,6 +1,6 @@
-use bevy::app::{App, PostUpdate, Update};
-use bevy::prelude::{Component, Entity, Event, EventReader, IntoScheduleConfigs, Query};
-use bevy_event_flow::EventFlow;
+use bevy::app::{App, Update};
+use bevy::prelude::{Component, Entity, Event, Query};
+use bevy_event_flow::RegisterEventFlow;
 use bevy_event_flow_macros::Request;
 
 #[derive(Request, Event, Clone)]
@@ -14,7 +14,7 @@ enum Intermediary {
     Err { message: String },
 }
 
-#[derive(Event)]
+#[derive(Request, Event, Clone)]
 enum Output {
     Ok { entity: Entity },
     Err { message: String },
@@ -27,7 +27,7 @@ struct Name(String);
 struct Health(usize);
 
 fn handle_input(Input { entity }: Input, query: Query<&Name>) -> Intermediary {
-    if let Ok(Name(name)) = query.get(entity.clone()) {
+    if let Ok(Name(name)) = query.get(entity) {
         println!("Oh no, {name} is hit!");
         Intermediary::Ok { entity }
     } else {
@@ -40,7 +40,7 @@ fn handle_input(Input { entity }: Input, query: Query<&Name>) -> Intermediary {
 fn handle_intermediary(response: Intermediary, mut query: Query<(&Name, &mut Health)>) -> Output {
     match response {
         Intermediary::Ok { entity } => {
-            if let Ok((Name(name), mut health)) = query.get_mut(entity.clone()) {
+            if let Ok((Name(name), mut health)) = query.get_mut(entity) {
                 health.0 -= 1;
                 println!("{name} took 1 damage!");
                 Output::Ok { entity }
@@ -54,37 +54,22 @@ fn handle_intermediary(response: Intermediary, mut query: Query<(&Name, &mut Hea
     }
 }
 
-fn read_intermediary(mut reader: EventReader<Intermediary>) {
-    for intermediary in reader.read() {
-        if let Intermediary::Err { message } = intermediary {
-            println!("{}", message)
-        }
-    }
-}
-
-fn read_output(mut reader: EventReader<Output>, query: Query<(&Name, &Health)>) {
-    for output in reader.read() {
-        match output {
-            Output::Ok { entity } => {
-                if let Ok((Name(name), Health(health))) = query.get(entity.clone()) {
-                    println!("Player {name} now has {health} health.")
-                } else {
-                    println!("System read_output query could not be fulfilled.")
-                }
+fn read_output(output: Output, query: Query<(&Name, &Health)>) {
+    match output {
+        Output::Ok { entity } => {
+            if let Ok((Name(name), Health(health))) = query.get(entity) {
+                println!("Player {name} now has {health} health.")
+            } else {
+                println!("System read_output query could not be fulfilled.")
             }
-            Output::Err { message } => println!("{}", message),
         }
+        Output::Err { message } => println!("{}", message),
     }
 }
 
 fn main() {
     let mut app = App::new();
-    app.add_event_flow(Update, handle_input)
-        .add_event_flow_after::<Input, _, _, _>(Update, handle_intermediary)
-        .add_systems(
-            PostUpdate,
-            (read_intermediary, read_output.after(read_intermediary)),
-        );
+    app.add_event_processor_flow(Update, (handle_input, handle_intermediary, read_output));
     let victor = app.world_mut().spawn((Name("Victor".to_string()), Health(10))).id();
     let luna = app.world_mut().spawn((Name("Luna".to_string()), Health(10))).id();
     app.world_mut().commands().send_event(Input {

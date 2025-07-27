@@ -1,5 +1,5 @@
 use bevy::prelude::{App, Event, ResMut, Resource, Update};
-use bevy_event_flow::EventFlow;
+use bevy_event_flow::{RegisterEventFlow};
 use bevy_event_flow_macros::Request;
 
 #[derive(Default, Resource)]
@@ -52,15 +52,9 @@ fn consumer(_: Consumed, mut number_consumed: ResMut<EventsConsumed>) {
 fn main() {
     let mut app = App::new();
     app.init_resource::<EventsConsumed>();
-    app.add_event_flow(Update, producer1)
-        .add_event_flow(Update, producer2)
-        .add_event_flow(Update, producer3)
-        .add_event_flow_after::<Producer, _, _, _>(Update, process1)
-        .add_event_flow_after::<Producer, _, _, _>(Update, process2)
-        .add_event_flow_after::<Producer, _, _, _>(Update, process3)
-        .add_event_handler_after::<Produced1, _, _>(Update, consumer)
-        .add_event_handler_after::<Produced2, _, _>(Update, consumer)
-        .add_event_handler_after::<Produced3, _, _>(Update, consumer);
+    app.add_event_processor_flow(Update, (producer1, process1, consumer));
+    app.add_event_processor_flow(Update, (producer2, process2, consumer));
+    app.add_event_processor_flow(Update, (producer3, process3, consumer));
 
     // use bevy_mod_debugdump::{schedule_graph, schedule_graph_dot};
     // let dot = schedule_graph_dot(&mut app, Update, &schedule_graph::Settings::default());
