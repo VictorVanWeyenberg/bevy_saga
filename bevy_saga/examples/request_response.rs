@@ -1,6 +1,6 @@
 use bevy::app::{App, Update};
 use bevy::prelude::Event;
-use bevy_saga::RegisterEventSaga;
+use bevy_saga::RegisterSaga;
 use bevy_saga_macros::SagaEvent;
 
 #[derive(Clone, Event, SagaEvent)]

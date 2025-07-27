@@ -4,13 +4,13 @@ use bevy::prelude::{App, Event, IntoSystem, SystemInput};
 use crate::processor_saga::Saga;
 use crate::SagaEvent;
 
-pub trait RegisterEventSaga {
+pub trait RegisterSaga {
     fn add_saga<M, L>(&mut self, label: L, saga: impl Saga<M>) -> &mut Self
     where
         L: ScheduleLabel + Clone;
 }
 
-impl RegisterEventSaga for App {
+impl RegisterSaga for App {
     fn add_saga<M, L>(&mut self, label: L, saga: impl Saga<M>) -> &mut Self
     where
         L: ScheduleLabel + Clone
