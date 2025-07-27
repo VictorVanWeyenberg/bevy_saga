@@ -1,32 +1,33 @@
 use crate::util::{send_response, EventHandlers, EventProcessors};
-use crate::{EventProcessorFlow, Request};
 use bevy::ecs::schedule::ScheduleLabel;
 use bevy::prelude::{App, Event, IntoSystem, SystemInput};
+use crate::processor_saga::Saga;
+use crate::SagaEvent;
 
-pub trait RegisterEventFlow {
-    fn add_event_processor_flow<M, L>(&mut self, label: L, flow: impl EventProcessorFlow<M>) -> &mut Self
+pub trait RegisterEventSaga {
+    fn add_saga<M, L>(&mut self, label: L, saga: impl Saga<M>) -> &mut Self
     where
         L: ScheduleLabel + Clone;
 }
 
-impl RegisterEventFlow for App {
-    fn add_event_processor_flow<M, L>(&mut self, label: L, flow: impl EventProcessorFlow<M>) -> &mut Self
+impl RegisterEventSaga for App {
+    fn add_saga<M, L>(&mut self, label: L, saga: impl Saga<M>) -> &mut Self
     where
         L: ScheduleLabel + Clone
     {
-        // TODO: register is visible to everything that knows EventProcessorFlow.
-        flow.register_flow(label, self);
+        // TODO: register is visible to everything that knows Saga.
+        saga.register(label, self);
         self
     }
 }
 
-pub trait EventFlow {
-    fn add_event_flow<R, Rs, M>(
+pub trait BevySagaUtil {
+    fn add_event_processor<R, Rs, M>(
         &mut self,
         handler: impl IntoSystem<R, Rs, M> + 'static,
     ) -> &mut Self
     where
-        R: Request + SystemInput<Inner<'static> = R>,
+        R: SagaEvent + SystemInput<Inner<'static> = R>,
         Rs: Event;
 
     fn add_event_handler<R, M>(
@@ -34,16 +35,16 @@ pub trait EventFlow {
         handler: impl IntoSystem<R, (), M> + 'static,
     ) -> &mut Self
     where
-        R: Request + SystemInput<Inner<'static> = R>;
+        R: SagaEvent + SystemInput<Inner<'static> = R>;
 }
 
-impl EventFlow for App {
-    fn add_event_flow<R, Rs, M>(
+impl BevySagaUtil for App {
+    fn add_event_processor<R, Rs, M>(
         &mut self,
         handler: impl IntoSystem<R, Rs, M> + 'static,
     ) -> &mut Self
     where
-        R: Request + SystemInput<Inner<'static> = R>,
+        R: SagaEvent + SystemInput<Inner<'static> = R>,
         Rs: Event,
     {
         self.add_event::<R>();
@@ -60,7 +61,7 @@ impl EventFlow for App {
         handler: impl IntoSystem<R, (), M> + 'static,
     ) -> &mut Self
     where
-        R: Request + SystemInput<Inner<'static> = R>,
+        R: SagaEvent + SystemInput<Inner<'static> = R>,
     {
         self.add_event::<R>();
         self.init_resource::<EventHandlers<R>>();

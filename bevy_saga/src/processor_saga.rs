@@ -2,38 +2,38 @@ use bevy::ecs::schedule::ScheduleLabel;
 use bevy::prelude::{App, IntoScheduleConfigs, SystemInput};
 use crate::handler_set::EventHandlerSet;
 use crate::processor_set::EventProcessorSet;
-use crate::Request;
+use crate::SagaEvent;
 use crate::util::{handle_event, process_event};
 
-pub trait EventProcessorFlow<M> {
-    type In: Request + SystemInput<Inner<'static> = Self::In>;
+pub trait Saga<M> {
+    type In: SagaEvent + SystemInput<Inner<'static> = Self::In>;
 
-    fn register_flow(self, label: impl ScheduleLabel, app: &mut App);
+    fn register(self, label: impl ScheduleLabel, app: &mut App);
 }
 
-impl<S, M, In> EventProcessorFlow<(M,)> for S
+impl<S, M, In> Saga<(M,)> for S
 where
-    In: Request + SystemInput<Inner<'static> = In>,
+    In: SagaEvent + SystemInput<Inner<'static> = In>,
     S: EventHandlerSet<M, In=In>,
 {
     type In = In;
 
-    fn register_flow(self, label: impl ScheduleLabel, app: &mut App) {
+    fn register(self, label: impl ScheduleLabel, app: &mut App) {
         self.register_handler(app);
         app.add_systems(label, handle_event::<Self::In>);
     }
 }
 
-impl<S1, S2, M1, M2, In> EventProcessorFlow<(M1, M2)> for (S1, S2)
+impl<S1, S2, M1, M2, In> Saga<(M1, M2)> for (S1, S2)
 where
-    In: Request + SystemInput<Inner<'static> = In>,
+    In: SagaEvent + SystemInput<Inner<'static> = In>,
     S1: EventProcessorSet<M1, In=In>,
     S2: EventHandlerSet<M2, In=S1::Out>,
-    S2::In: Request + SystemInput<Inner<'static> = S2::In>,
+    S2::In: SagaEvent + SystemInput<Inner<'static> = S2::In>,
 {
     type In = In;
 
-    fn register_flow(self, label: impl ScheduleLabel, app: &mut App) {
+    fn register(self, label: impl ScheduleLabel, app: &mut App) {
         let (s1, s2) = self;
         s1.register_processor(app);
         s2.register_handler(app);
@@ -44,18 +44,18 @@ where
     }
 }
 
-impl<S1, S2, S3, M1, M2, M3, In> EventProcessorFlow<(M1, M2, M3)> for (S1, S2, S3)
+impl<S1, S2, S3, M1, M2, M3, In> Saga<(M1, M2, M3)> for (S1, S2, S3)
 where
-    In: Request + SystemInput<Inner<'static> = In>,
+    In: SagaEvent + SystemInput<Inner<'static> = In>,
     S1: EventProcessorSet<M1, In=In>,
     S2: EventProcessorSet<M2, In=S1::Out>,
     S3: EventHandlerSet<M3, In=S2::Out>,
-    S2::In: Request + SystemInput<Inner<'static> = S2::In>,
-    S3::In: Request + SystemInput<Inner<'static> = S3::In>,
+    S2::In: SagaEvent + SystemInput<Inner<'static> = S2::In>,
+    S3::In: SagaEvent + SystemInput<Inner<'static> = S3::In>,
 {
     type In = In;
 
-    fn register_flow(self, label: impl ScheduleLabel, app: &mut App) {
+    fn register(self, label: impl ScheduleLabel, app: &mut App) {
         let (s1, s2, s3) = self;
         s1.register_processor(app);
         s2.register_processor(app);
@@ -68,20 +68,20 @@ where
     }
 }
 
-impl<S1, S2, S3, S4, M1, M2, M3, M4, In> EventProcessorFlow<(M1, M2, M3, M4)> for (S1, S2, S3, S4)
+impl<S1, S2, S3, S4, M1, M2, M3, M4, In> Saga<(M1, M2, M3, M4)> for (S1, S2, S3, S4)
 where
-    In: Request + SystemInput<Inner<'static> = In>,
+    In: SagaEvent + SystemInput<Inner<'static> = In>,
     S1: EventProcessorSet<M1, In=In>,
     S2: EventProcessorSet<M2, In=S1::Out>,
     S3: EventProcessorSet<M3, In=S2::Out>,
     S4: EventHandlerSet<M4, In=S3::Out>,
-    S2::In: Request + SystemInput<Inner<'static> = S2::In>,
-    S3::In: Request + SystemInput<Inner<'static> = S3::In>,
-    S4::In: Request + SystemInput<Inner<'static> = S4::In>,
+    S2::In: SagaEvent + SystemInput<Inner<'static> = S2::In>,
+    S3::In: SagaEvent + SystemInput<Inner<'static> = S3::In>,
+    S4::In: SagaEvent + SystemInput<Inner<'static> = S4::In>,
 {
     type In = In;
 
-    fn register_flow(self, label: impl ScheduleLabel, app: &mut App) {
+    fn register(self, label: impl ScheduleLabel, app: &mut App) {
         let (s1, s2, s3, s4) = self;
         s1.register_processor(app);
         s2.register_processor(app);

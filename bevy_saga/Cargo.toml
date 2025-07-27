@@ -1,5 +1,5 @@
 [package]
-name = "bevy_event_flow"
+name = "bevy_saga"
 version = "0.1.0"
 edition = "2024"
 
@@ -9,4 +9,4 @@ edition = "2024"
 bevy = { version = "0.16", default-features = false }
 
 [dev-dependencies]
-bevy_event_flow_macros = { path = "../bevy_event_flow_macros" }
+bevy_saga_macros = { path = "../bevy_saga_macros" }

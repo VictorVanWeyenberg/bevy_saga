@@ -1,16 +1,16 @@
 use bevy::prelude::{Event, SystemInput};
 
-mod flow;
+mod saga;
 mod handler_set;
 mod processor_set;
-mod processor_flow;
+mod processor_saga;
 mod util;
 
-pub use flow::RegisterEventFlow;
+pub use saga::RegisterEventSaga;
 pub use processor_set::EventProcessorSet;
-pub use processor_flow::EventProcessorFlow;
+pub use processor_saga::Saga;
 
 // Fallible Events that won't propagate. ?
 // BUG?: Sending the same event multiple times, then updating once (with chaining).
 
-pub trait Request: Event + Clone + SystemInput {}
+pub trait SagaEvent: Event + Clone + SystemInput {}

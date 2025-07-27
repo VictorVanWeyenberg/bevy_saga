@@ -1,23 +1,23 @@
 use bevy::prelude::{App, Event, ResMut, Resource, Update};
-use bevy_event_flow::{RegisterEventFlow};
-use bevy_event_flow_macros::Request;
+use bevy_saga::{RegisterEventSaga};
+use bevy_saga_macros::SagaEvent;
 
 #[derive(Default, Resource)]
 struct EventsConsumed(usize);
 
-#[derive(Clone, Event, Request)]
+#[derive(Clone, Event, SagaEvent)]
 struct Producer;
 
-#[derive(Clone, Event, Request)]
+#[derive(Clone, Event, SagaEvent)]
 struct Produced1;
 
-#[derive(Clone, Event, Request)]
+#[derive(Clone, Event, SagaEvent)]
 struct Produced2;
 
-#[derive(Clone, Event, Request)]
+#[derive(Clone, Event, SagaEvent)]
 struct Produced3;
 
-#[derive(Clone, Event, Request)]
+#[derive(Clone, Event, SagaEvent)]
 struct Consumed;
 
 fn producer1(_: Producer) -> Produced1 {
@@ -52,9 +52,9 @@ fn consumer(_: Consumed, mut number_consumed: ResMut<EventsConsumed>) {
 fn main() {
     let mut app = App::new();
     app.init_resource::<EventsConsumed>();
-    app.add_event_processor_flow(Update, (producer1, process1, consumer));
-    app.add_event_processor_flow(Update, (producer2, process2, consumer));
-    app.add_event_processor_flow(Update, (producer3, process3, consumer));
+    app.add_saga(Update, (producer1, process1, consumer));
+    app.add_saga(Update, (producer2, process2, consumer));
+    app.add_saga(Update, (producer3, process3, consumer));
 
     // use bevy_mod_debugdump::{schedule_graph, schedule_graph_dot};
     // let dot = schedule_graph_dot(&mut app, Update, &schedule_graph::Settings::default());

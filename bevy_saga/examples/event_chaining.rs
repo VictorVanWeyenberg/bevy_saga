@@ -1,20 +1,20 @@
 use bevy::app::{App, Update};
 use bevy::prelude::{Component, Entity, Event, Query};
-use bevy_event_flow::RegisterEventFlow;
-use bevy_event_flow_macros::Request;
+use bevy_saga::RegisterEventSaga;
+use bevy_saga_macros::SagaEvent;
 
-#[derive(Request, Event, Clone)]
+#[derive(SagaEvent, Event, Clone)]
 struct Input {
     entity: Entity,
 }
 
-#[derive(Request, Event, Clone)]
+#[derive(SagaEvent, Event, Clone)]
 enum Intermediary {
     Ok { entity: Entity },
     Err { message: String },
 }
 
-#[derive(Request, Event, Clone)]
+#[derive(SagaEvent, Event, Clone)]
 enum Output {
     Ok { entity: Entity },
     Err { message: String },
@@ -69,7 +69,7 @@ fn read_output(output: Output, query: Query<(&Name, &Health)>) {
 
 fn main() {
     let mut app = App::new();
-    app.add_event_processor_flow(Update, (handle_input, handle_intermediary, read_output));
+    app.add_saga(Update, (handle_input, handle_intermediary, read_output));
     let victor = app.world_mut().spawn((Name("Victor".to_string()), Health(10))).id();
     let luna = app.world_mut().spawn((Name("Luna".to_string()), Health(10))).id();
     app.world_mut().commands().send_event(Input {

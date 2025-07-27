@@ -6,7 +6,7 @@ fn derive_bevy_request2(input: proc_macro2::TokenStream) -> deluxe::Result<proc_
     let ast: DeriveInput = syn::parse2(input)?;
     let ident = &ast.ident;
     Ok(quote! {
-        impl bevy_event_flow::Request for #ident {
+        impl bevy_saga::SagaEvent for #ident {
         }
 
         impl bevy::prelude::SystemInput for #ident {
@@ -20,7 +20,7 @@ fn derive_bevy_request2(input: proc_macro2::TokenStream) -> deluxe::Result<proc_
     })
 }
 
-#[proc_macro_derive(Request)]
+#[proc_macro_derive(SagaEvent)]
 pub fn derive_bevy_request(input: TokenStream) -> TokenStream {
     derive_bevy_request2(input.into()).unwrap().into()
 }
