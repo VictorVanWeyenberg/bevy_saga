@@ -84,6 +84,15 @@ where
     writer.write(response);
 }
 
+pub fn send_option_response<Rs>(In(response): In<Option<Rs>>, mut writer: EventWriter<Rs>)
+where
+    Rs: Event,
+{
+    if let Some(response) = response {
+        writer.write(response);
+    }
+}
+
 pub fn handle_event<R>(
     mut reader: ResMut<Events<R>>,
     handler: Res<EventHandlers<R>>,

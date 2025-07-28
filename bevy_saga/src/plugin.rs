@@ -1,5 +1,5 @@
 use crate::processor_saga::Saga;
-use crate::util::{send_response, EventHandlers, EventProcessors};
+use crate::util::{send_option_response, send_response, EventHandlers, EventProcessors};
 use crate::SagaEvent;
 use bevy::ecs::schedule::ScheduleLabel;
 use bevy::prelude::{App, Event, IntoSystem};
@@ -30,6 +30,14 @@ pub trait BevySagaUtil {
         R: SagaEvent,
         Rs: Event;
 
+    fn add_option_processor<R, Rs, M>(
+        &mut self,
+        handler: impl IntoSystem<R, Option<Rs>, M> + 'static,
+    ) -> &mut Self
+    where
+        R: SagaEvent,
+        Rs: Event;
+
     fn add_event_handler<R, M>(
         &mut self,
         handler: impl IntoSystem<R, (), M> + 'static,
@@ -50,6 +58,20 @@ impl BevySagaUtil for App {
         self.add_event::<R>();
         self.init_resource::<EventProcessors<R, Rs>>();
         let id = self.register_system(handler.pipe(send_response::<Rs>));
+        self.world_mut()
+            .resource_mut::<EventProcessors<R, Rs>>()
+            .push(id);
+        self
+    }
+
+    fn add_option_processor<R, Rs, M>(&mut self, handler: impl IntoSystem<R, Option<Rs>, M> + 'static) -> &mut Self
+    where
+        R: SagaEvent,
+        Rs: Event
+    {
+        self.add_event::<R>();
+        self.init_resource::<EventProcessors<R, Rs>>();
+        let id = self.register_system(handler.pipe(send_option_response::<Rs>));
         self.world_mut()
             .resource_mut::<EventProcessors<R, Rs>>()
             .push(id);
