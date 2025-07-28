@@ -1,5 +1,5 @@
-use crate::handler_set::EventHandlerSet;
-use crate::processor_set::EventProcessorSet;
+use crate::handler::EventHandler;
+use crate::processor::EventProcessor;
 use crate::util::{handle_event, process_event};
 use crate::SagaEvent;
 use bevy::ecs::schedule::ScheduleLabel;
@@ -14,7 +14,7 @@ pub trait Saga<M> {
 impl<S, M, In> Saga<(M,)> for S
 where
     In: SagaEvent,
-    S: EventHandlerSet<M, In=In>,
+    S: EventHandler<M, In=In>,
 {
     type In = In;
 
@@ -27,8 +27,8 @@ where
 impl<S1, S2, M1, M2, In> Saga<(M1, M2)> for (S1, S2)
 where
     In: SagaEvent,
-    S1: EventProcessorSet<M1, In=In>,
-    S2: EventHandlerSet<M2, In=S1::Out>,
+    S1: EventProcessor<M1, In=In>,
+    S2: EventHandler<M2, In=S1::Out>,
     S2::In: SagaEvent,
 {
     type In = In;
@@ -47,9 +47,9 @@ where
 impl<S1, S2, S3, M1, M2, M3, In> Saga<(M1, M2, M3)> for (S1, S2, S3)
 where
     In: SagaEvent,
-    S1: EventProcessorSet<M1, In=In>,
-    S2: EventProcessorSet<M2, In=S1::Out>,
-    S3: EventHandlerSet<M3, In=S2::Out>,
+    S1: EventProcessor<M1, In=In>,
+    S2: EventProcessor<M2, In=S1::Out>,
+    S3: EventHandler<M3, In=S2::Out>,
     S2::In: SagaEvent,
     S3::In: SagaEvent,
 {
@@ -71,10 +71,10 @@ where
 impl<S1, S2, S3, S4, M1, M2, M3, M4, In> Saga<(M1, M2, M3, M4)> for (S1, S2, S3, S4)
 where
     In: SagaEvent,
-    S1: EventProcessorSet<M1, In=In>,
-    S2: EventProcessorSet<M2, In=S1::Out>,
-    S3: EventProcessorSet<M3, In=S2::Out>,
-    S4: EventHandlerSet<M4, In=S3::Out>,
+    S1: EventProcessor<M1, In=In>,
+    S2: EventProcessor<M2, In=S1::Out>,
+    S3: EventProcessor<M3, In=S2::Out>,
+    S4: EventHandler<M4, In=S3::Out>,
     S2::In: SagaEvent,
     S3::In: SagaEvent,
     S4::In: SagaEvent,

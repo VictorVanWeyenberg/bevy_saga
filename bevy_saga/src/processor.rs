@@ -4,14 +4,14 @@ use crate::{
 };
 use bevy::prelude::{App, Event, SystemParamFunction};
 
-pub trait EventProcessorSet<M> {
+pub trait EventProcessor<M> {
     type In: SagaEvent;
     type Out: Event;
 
     fn register_processor(self, app: &mut App);
 }
 
-impl<SPF, M, In, Out> EventProcessorSet<(M,)> for SPF
+impl<SPF, M, In, Out> EventProcessor<(M,)> for SPF
 where
     In: SagaEvent,
     Out: Event,
@@ -26,7 +26,7 @@ where
     }
 }
 
-impl<SPF1, SPF2, M1, M2, In, Out> EventProcessorSet<(M1, M2)> for (SPF1, SPF2)
+impl<SPF1, SPF2, M1, M2, In, Out> EventProcessor<(M1, M2)> for (SPF1, SPF2)
 where
     In: SagaEvent,
     Out: Event,
@@ -45,7 +45,7 @@ where
     }
 }
 
-impl<SPF1, SPF2, SPF3, M1, M2, M3, In, Out> EventProcessorSet<(M1, M2, M3)> for (SPF1, SPF2, SPF3)
+impl<SPF1, SPF2, SPF3, M1, M2, M3, In, Out> EventProcessor<(M1, M2, M3)> for (SPF1, SPF2, SPF3)
 where
     In: SagaEvent,
     Out: Event,
@@ -67,7 +67,7 @@ where
     }
 }
 
-impl<SPF1, SPF2, SPF3, SPF4, M1, M2, M3, M4, In, Out> EventProcessorSet<(M1, M2, M3, M4)> for (SPF1, SPF2, SPF3, SPF4)
+impl<SPF1, SPF2, SPF3, SPF4, M1, M2, M3, M4, In, Out> EventProcessor<(M1, M2, M3, M4)> for (SPF1, SPF2, SPF3, SPF4)
 where
     In: SagaEvent,
     Out: Event,
