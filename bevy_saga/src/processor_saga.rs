@@ -1,19 +1,19 @@
-use bevy::ecs::schedule::ScheduleLabel;
-use bevy::prelude::{App, IntoScheduleConfigs, SystemInput};
 use crate::handler_set::EventHandlerSet;
 use crate::processor_set::EventProcessorSet;
-use crate::SagaEvent;
 use crate::util::{handle_event, process_event};
+use crate::SagaEvent;
+use bevy::ecs::schedule::ScheduleLabel;
+use bevy::prelude::{App, IntoScheduleConfigs};
 
 pub trait Saga<M> {
-    type In: SagaEvent + SystemInput<Inner<'static> = Self::In>;
+    type In: SagaEvent;
 
     fn register(self, label: impl ScheduleLabel, app: &mut App);
 }
 
 impl<S, M, In> Saga<(M,)> for S
 where
-    In: SagaEvent + SystemInput<Inner<'static> = In>,
+    In: SagaEvent,
     S: EventHandlerSet<M, In=In>,
 {
     type In = In;
@@ -26,10 +26,10 @@ where
 
 impl<S1, S2, M1, M2, In> Saga<(M1, M2)> for (S1, S2)
 where
-    In: SagaEvent + SystemInput<Inner<'static> = In>,
+    In: SagaEvent,
     S1: EventProcessorSet<M1, In=In>,
     S2: EventHandlerSet<M2, In=S1::Out>,
-    S2::In: SagaEvent + SystemInput<Inner<'static> = S2::In>,
+    S2::In: SagaEvent,
 {
     type In = In;
 
@@ -46,12 +46,12 @@ where
 
 impl<S1, S2, S3, M1, M2, M3, In> Saga<(M1, M2, M3)> for (S1, S2, S3)
 where
-    In: SagaEvent + SystemInput<Inner<'static> = In>,
+    In: SagaEvent,
     S1: EventProcessorSet<M1, In=In>,
     S2: EventProcessorSet<M2, In=S1::Out>,
     S3: EventHandlerSet<M3, In=S2::Out>,
-    S2::In: SagaEvent + SystemInput<Inner<'static> = S2::In>,
-    S3::In: SagaEvent + SystemInput<Inner<'static> = S3::In>,
+    S2::In: SagaEvent,
+    S3::In: SagaEvent,
 {
     type In = In;
 
@@ -70,14 +70,14 @@ where
 
 impl<S1, S2, S3, S4, M1, M2, M3, M4, In> Saga<(M1, M2, M3, M4)> for (S1, S2, S3, S4)
 where
-    In: SagaEvent + SystemInput<Inner<'static> = In>,
+    In: SagaEvent,
     S1: EventProcessorSet<M1, In=In>,
     S2: EventProcessorSet<M2, In=S1::Out>,
     S3: EventProcessorSet<M3, In=S2::Out>,
     S4: EventHandlerSet<M4, In=S3::Out>,
-    S2::In: SagaEvent + SystemInput<Inner<'static> = S2::In>,
-    S3::In: SagaEvent + SystemInput<Inner<'static> = S3::In>,
-    S4::In: SagaEvent + SystemInput<Inner<'static> = S4::In>,
+    S2::In: SagaEvent,
+    S3::In: SagaEvent,
+    S4::In: SagaEvent,
 {
     type In = In;
 

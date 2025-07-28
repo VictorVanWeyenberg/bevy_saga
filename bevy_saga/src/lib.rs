@@ -11,4 +11,4 @@ pub use plugin::RegisterSaga;
 // Fallible Events that won't propagate. ?
 // BUG?: Sending the same event multiple times, then updating once (with chaining).
 
-pub trait SagaEvent: Event + Clone + SystemInput {}
+pub trait SagaEvent: Event + Clone + SystemInput<Inner<'static> = Self> {}

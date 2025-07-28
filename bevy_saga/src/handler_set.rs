@@ -2,17 +2,17 @@ use crate::{
     plugin::BevySagaUtil,
     SagaEvent,
 };
-use bevy::prelude::{App, SystemInput, SystemParamFunction};
+use bevy::prelude::{App, SystemParamFunction};
 
 pub trait EventHandlerSet<M> {
-    type In: SagaEvent + SystemInput<Inner<'static> = Self::In>;
+    type In: SagaEvent;
 
     fn register_handler(self, app: &mut App);
 }
 
 impl<SPF, M, In> EventHandlerSet<(M,)> for SPF
 where
-    In: SagaEvent + SystemInput<Inner<'static> = In>,
+    In: SagaEvent,
     SPF: SystemParamFunction<M, In = In, Out = ()>,
     M: 'static,
 {
@@ -25,7 +25,7 @@ where
 
 impl<SPF1, SPF2, M1, M2, In> EventHandlerSet<(M1, M2)> for (SPF1, SPF2)
 where
-    In: SagaEvent + SystemInput<Inner<'static> = In>,
+    In: SagaEvent,
     SPF1: SystemParamFunction<M1, In = In, Out = ()>,
     SPF2: SystemParamFunction<M2, In = In, Out = ()>,
     M1: 'static,
@@ -42,7 +42,7 @@ where
 
 impl<SPF1, SPF2, SPF3, M1, M2, M3, In> EventHandlerSet<(M1, M2, M3)> for (SPF1, SPF2, SPF3)
 where
-    In: SagaEvent + SystemInput<Inner<'static> = In>,
+    In: SagaEvent,
     SPF1: SystemParamFunction<M1, In = In, Out = ()>,
     SPF2: SystemParamFunction<M2, In = In, Out = ()>,
     SPF3: SystemParamFunction<M3, In = In, Out = ()>,
@@ -62,7 +62,7 @@ where
 
 impl<SPF1, SPF2, SPF3, SPF4, M1, M2, M3, M4, In> EventHandlerSet<(M1, M2, M3, M4)> for (SPF1, SPF2, SPF3, SPF4)
 where
-    In: SagaEvent + SystemInput<Inner<'static> = In>,
+    In: SagaEvent,
     SPF1: SystemParamFunction<M1, In = In, Out = ()>,
     SPF2: SystemParamFunction<M2, In = In, Out = ()>,
     SPF3: SystemParamFunction<M3, In = In, Out = ()>,

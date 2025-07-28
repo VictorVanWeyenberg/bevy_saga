@@ -1,8 +1,8 @@
-use crate::util::{send_response, EventHandlers, EventProcessors};
-use bevy::ecs::schedule::ScheduleLabel;
-use bevy::prelude::{App, Event, IntoSystem, SystemInput};
 use crate::processor_saga::Saga;
+use crate::util::{send_response, EventHandlers, EventProcessors};
 use crate::SagaEvent;
+use bevy::ecs::schedule::ScheduleLabel;
+use bevy::prelude::{App, Event, IntoSystem};
 
 pub trait RegisterSaga {
     fn add_saga<M, L>(&mut self, label: L, saga: impl Saga<M>) -> &mut Self
@@ -27,7 +27,7 @@ pub trait BevySagaUtil {
         handler: impl IntoSystem<R, Rs, M> + 'static,
     ) -> &mut Self
     where
-        R: SagaEvent + SystemInput<Inner<'static> = R>,
+        R: SagaEvent,
         Rs: Event;
 
     fn add_event_handler<R, M>(
@@ -35,7 +35,7 @@ pub trait BevySagaUtil {
         handler: impl IntoSystem<R, (), M> + 'static,
     ) -> &mut Self
     where
-        R: SagaEvent + SystemInput<Inner<'static> = R>;
+        R: SagaEvent;
 }
 
 impl BevySagaUtil for App {
@@ -44,7 +44,7 @@ impl BevySagaUtil for App {
         handler: impl IntoSystem<R, Rs, M> + 'static,
     ) -> &mut Self
     where
-        R: SagaEvent + SystemInput<Inner<'static> = R>,
+        R: SagaEvent,
         Rs: Event,
     {
         self.add_event::<R>();
@@ -61,7 +61,7 @@ impl BevySagaUtil for App {
         handler: impl IntoSystem<R, (), M> + 'static,
     ) -> &mut Self
     where
-        R: SagaEvent + SystemInput<Inner<'static> = R>,
+        R: SagaEvent,
     {
         self.add_event::<R>();
         self.init_resource::<EventHandlers<R>>();

@@ -1,12 +1,12 @@
-use std::marker::PhantomData;
-use bevy::ecs::system::SystemId;
-use bevy::prelude::{Commands, Event, EventWriter, Events, In, Res, ResMut, Resource, SystemInput};
 use crate::SagaEvent;
+use bevy::ecs::system::SystemId;
+use bevy::prelude::{Commands, Event, EventWriter, Events, In, Res, ResMut, Resource};
+use std::marker::PhantomData;
 
 #[derive(Resource)]
 pub struct EventProcessors<R, Rs>
 where
-    R: SagaEvent + SystemInput,
+    R: SagaEvent,
     Rs: Sized + Send + Sync,
 {
     ids: Vec<SystemId<R, ()>>,
@@ -15,20 +15,20 @@ where
 
 impl<R, Rs> Default for EventProcessors<R, Rs>
 where
-    R: SagaEvent + SystemInput,
+    R: SagaEvent,
     Rs: Sized + Send + Sync,
 {
     fn default() -> Self {
         EventProcessors {
             ids: vec![],
-            _marker: PhantomData::default(),
+            _marker: PhantomData,
         }
     }
 }
 
 impl<R, Rs> EventProcessors<R, Rs>
 where
-    R: SagaEvent + SystemInput,
+    R: SagaEvent,
     Rs: Sized + Send + Sync,
 {
     pub fn push(&mut self, system_id: SystemId<R, ()>) {
@@ -39,14 +39,14 @@ where
 #[derive(Resource)]
 pub struct EventHandlers<R>
 where
-    R: SagaEvent + SystemInput,
+    R: SagaEvent,
 {
     ids: Vec<SystemId<R, ()>>,
 }
 
 impl<R> Default for EventHandlers<R>
 where
-    R: SagaEvent + SystemInput,
+    R: SagaEvent,
 {
     fn default() -> Self {
         EventHandlers { ids: vec![] }
@@ -55,7 +55,7 @@ where
 
 impl<R> EventHandlers<R>
 where
-    R: SagaEvent + SystemInput,
+    R: SagaEvent,
 {
     pub fn push(&mut self, system_id: SystemId<R, ()>) {
         self.ids.push(system_id)
@@ -67,7 +67,7 @@ pub fn process_event<R, Rs>(
     handler: Res<EventProcessors<R, Rs>>,
     mut commands: Commands,
 ) where
-    R: SagaEvent + SystemInput<Inner<'static> = R>,
+    R: SagaEvent,
     Rs: Event,
 {
     for event in reader.drain() {
@@ -89,7 +89,7 @@ pub fn handle_event<R>(
     handler: Res<EventHandlers<R>>,
     mut commands: Commands,
 ) where
-    R: SagaEvent + SystemInput<Inner<'static> = R>,
+    R: SagaEvent,
 {
     for event in reader.drain() {
         for id in &handler.ids {
