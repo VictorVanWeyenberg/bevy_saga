@@ -1,12 +1,12 @@
 use bevy::prelude::{Event, SystemInput};
 
-mod saga;
+mod plugin;
 mod handler_set;
 mod processor_set;
 mod processor_saga;
 mod util;
 
-pub use saga::RegisterSaga;
+pub use plugin::RegisterSaga;
 
 // Fallible Events that won't propagate. ?
 // BUG?: Sending the same event multiple times, then updating once (with chaining).
