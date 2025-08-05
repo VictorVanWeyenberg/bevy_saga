@@ -1,25 +1,30 @@
+use crate::SagaEvent;
 use crate::handler::EventHandler;
 use crate::processor::EventProcessor;
 use crate::util::{handle_event, process_event};
-use crate::SagaEvent;
 use bevy::ecs::schedule::ScheduleLabel;
 use bevy::prelude::{App, IntoScheduleConfigs};
 
 pub trait Saga<M> {
     type In: SagaEvent;
 
-    fn register(self, label: impl ScheduleLabel, app: &mut App);
+    fn register<Label>(self, label: Label, app: &mut App)
+    where
+        Label: ScheduleLabel + Clone;
 }
 
 impl<S, M, In> Saga<(M,)> for S
 where
     In: SagaEvent,
-    S: EventHandler<M, In=In>,
+    S: EventHandler<M, In = In>,
 {
     type In = In;
 
-    fn register(self, label: impl ScheduleLabel, app: &mut App) {
-        self.register_handler(app);
+    fn register<Label>(self, label: Label, app: &mut App)
+    where
+        Label: ScheduleLabel + Clone,
+    {
+        self.register_handler(label.clone(), app);
         app.add_systems(label, handle_event::<Self::In>);
     }
 }
@@ -27,71 +32,88 @@ where
 impl<S1, S2, M1, M2, In> Saga<(M1, M2)> for (S1, S2)
 where
     In: SagaEvent,
-    S1: EventProcessor<M1, In=In>,
-    S2: EventHandler<M2, In=S1::Out>,
+    S1: EventProcessor<M1, In = In>,
+    S2: EventHandler<M2, In = S1::Out>,
     S2::In: SagaEvent,
 {
     type In = In;
 
-    fn register(self, label: impl ScheduleLabel, app: &mut App) {
+    fn register<Label>(self, label: Label, app: &mut App)
+    where
+        Label: ScheduleLabel + Clone,
+    {
         let (s1, s2) = self;
         s1.register_processor(app);
-        s2.register_handler(app);
-        app.add_systems(label, (
-            process_event::<S1::In, S1::Out>,
-            handle_event::<S2::In>,
-        ).chain());
+        s2.register_handler(label.clone(), app);
+        app.add_systems(
+            label,
+            (process_event::<S1::In, S1::Out>, handle_event::<S2::In>).chain(),
+        );
     }
 }
 
 impl<S1, S2, S3, M1, M2, M3, In> Saga<(M1, M2, M3)> for (S1, S2, S3)
 where
     In: SagaEvent,
-    S1: EventProcessor<M1, In=In>,
-    S2: EventProcessor<M2, In=S1::Out>,
-    S3: EventHandler<M3, In=S2::Out>,
+    S1: EventProcessor<M1, In = In>,
+    S2: EventProcessor<M2, In = S1::Out>,
+    S3: EventHandler<M3, In = S2::Out>,
     S2::In: SagaEvent,
     S3::In: SagaEvent,
 {
     type In = In;
 
-    fn register(self, label: impl ScheduleLabel, app: &mut App) {
+    fn register<Label>(self, label: Label, app: &mut App)
+    where
+        Label: ScheduleLabel + Clone,
+    {
         let (s1, s2, s3) = self;
         s1.register_processor(app);
         s2.register_processor(app);
-        s3.register_handler(app);
-        app.add_systems(label, (
-            process_event::<S1::In, S1::Out>,
-            process_event::<S2::In, S2::Out>,
-            handle_event::<S3::In>,
-        ).chain());
+        s3.register_handler(label.clone(), app);
+        app.add_systems(
+            label,
+            (
+                process_event::<S1::In, S1::Out>,
+                process_event::<S2::In, S2::Out>,
+                handle_event::<S3::In>,
+            )
+                .chain(),
+        );
     }
 }
 
 impl<S1, S2, S3, S4, M1, M2, M3, M4, In> Saga<(M1, M2, M3, M4)> for (S1, S2, S3, S4)
 where
     In: SagaEvent,
-    S1: EventProcessor<M1, In=In>,
-    S2: EventProcessor<M2, In=S1::Out>,
-    S3: EventProcessor<M3, In=S2::Out>,
-    S4: EventHandler<M4, In=S3::Out>,
+    S1: EventProcessor<M1, In = In>,
+    S2: EventProcessor<M2, In = S1::Out>,
+    S3: EventProcessor<M3, In = S2::Out>,
+    S4: EventHandler<M4, In = S3::Out>,
     S2::In: SagaEvent,
     S3::In: SagaEvent,
     S4::In: SagaEvent,
 {
     type In = In;
 
-    fn register(self, label: impl ScheduleLabel, app: &mut App) {
+    fn register<Label>(self, label: Label, app: &mut App)
+    where
+        Label: ScheduleLabel + Clone,
+    {
         let (s1, s2, s3, s4) = self;
         s1.register_processor(app);
         s2.register_processor(app);
         s3.register_processor(app);
-        s4.register_handler(app);
-        app.add_systems(label, (
-            process_event::<S1::In, S1::Out>,
-            process_event::<S2::In, S2::Out>,
-            process_event::<S3::In, S3::Out>,
-            handle_event::<S4::In>,
-        ).chain());
+        s4.register_handler(label.clone(), app);
+        app.add_systems(
+            label,
+            (
+                process_event::<S1::In, S1::Out>,
+                process_event::<S2::In, S2::Out>,
+                process_event::<S3::In, S3::Out>,
+                handle_event::<S4::In>,
+            )
+                .chain(),
+        );
     }
 }

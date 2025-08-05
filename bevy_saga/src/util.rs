@@ -93,6 +93,21 @@ where
     }
 }
 
+pub fn send_result_response<Ok, Err>(In(result): In<Result<Ok, Err>>, mut ok_writer: EventWriter<Ok>, mut err_writer: EventWriter<Err>)
+where
+    Ok: Event,
+    Err: Event,
+{
+    match result {
+        Ok(ok) => {
+            ok_writer.write(ok);
+        },
+        Err(err) => {
+            err_writer.write(err);
+        },
+    }
+}
+
 pub fn handle_event<R>(
     mut reader: ResMut<Events<R>>,
     handler: Res<EventHandlers<R>>,
