@@ -3,23 +3,23 @@ use bevy::ecs::system::SystemId;
 use bevy::prelude::{Commands, Event, EventWriter, Events, In, Res, ResMut, Resource};
 
 #[derive(Resource)]
-pub struct EventHandlers<R>
+pub struct EventProcessors<R>
 where
     R: SagaEvent,
 {
     ids: Vec<SystemId<R, ()>>,
 }
 
-impl<R> Default for EventHandlers<R>
+impl<R> Default for EventProcessors<R>
 where
     R: SagaEvent,
 {
     fn default() -> Self {
-        EventHandlers { ids: vec![] }
+        EventProcessors { ids: vec![] }
     }
 }
 
-impl<R> EventHandlers<R>
+impl<R> EventProcessors<R>
 where
     R: SagaEvent,
 {
@@ -30,7 +30,7 @@ where
 
 pub fn process_event<R, Rs>(
     mut reader: ResMut<Events<R>>,
-    handler: Res<EventHandlers<R>>,
+    handler: Res<EventProcessors<R>>,
     mut commands: Commands,
 ) where
     R: SagaEvent,
@@ -76,7 +76,7 @@ where
 
 pub fn handle_event<R>(
     mut reader: ResMut<Events<R>>,
-    handler: Res<EventHandlers<R>>,
+    handler: Res<EventProcessors<R>>,
     mut commands: Commands,
 ) where
     R: SagaEvent,

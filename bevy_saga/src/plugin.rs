@@ -1,6 +1,6 @@
 use crate::SagaEvent;
 use crate::saga::Saga;
-use crate::util::{EventHandlers, process_event, send_option_response, send_response, send_result_response, handle_event};
+use crate::util::{EventProcessors, process_event, send_option_response, send_response, send_result_response, handle_event};
 use bevy::ecs::schedule::{ScheduleConfigs, ScheduleLabel};
 use bevy::ecs::system::ScheduleSystem;
 use bevy::prelude::{App, Event, IntoScheduleConfigs, IntoSystem};
@@ -66,10 +66,10 @@ impl BevySagaUtil for App {
         Rs: Event,
     {
         self.add_event::<R>();
-        self.init_resource::<EventHandlers<R>>();
+        self.init_resource::<EventProcessors<R>>();
         let id = self.register_system(handler.pipe(send_response::<Rs>));
         self.world_mut()
-            .resource_mut::<EventHandlers<R>>()
+            .resource_mut::<EventProcessors<R>>()
             .push(id);
         process_event::<R, Rs>.into_configs()
     }
@@ -83,10 +83,10 @@ impl BevySagaUtil for App {
         Rs: Event,
     {
         self.add_event::<R>();
-        self.init_resource::<EventHandlers<R>>();
+        self.init_resource::<EventProcessors<R>>();
         let id = self.register_system(handler.pipe(send_option_response::<Rs>));
         self.world_mut()
-            .resource_mut::<EventHandlers<R>>()
+            .resource_mut::<EventProcessors<R>>()
             .push(id);
         process_event::<R, Rs>.into_configs()
     }
@@ -101,10 +101,10 @@ impl BevySagaUtil for App {
         Err: Event,
     {
         self.add_event::<R>();
-        self.init_resource::<EventHandlers<R>>();
-        self.init_resource::<EventHandlers<R>>();
+        self.init_resource::<EventProcessors<R>>();
+        self.init_resource::<EventProcessors<R>>();
         let id = self.register_system(handler.pipe(send_result_response::<Ok, Err>));
-        self.world_mut().resource_mut::<EventHandlers<R>>().push(id);
+        self.world_mut().resource_mut::<EventProcessors<R>>().push(id);
         handle_event::<R>.into_configs()
     }
 
@@ -116,9 +116,9 @@ impl BevySagaUtil for App {
         R: SagaEvent,
     {
         self.add_event::<R>();
-        self.init_resource::<EventHandlers<R>>();
+        self.init_resource::<EventProcessors<R>>();
         let id = self.register_system(handler);
-        self.world_mut().resource_mut::<EventHandlers<R>>().push(id);
+        self.world_mut().resource_mut::<EventProcessors<R>>().push(id);
         handle_event::<R>.into_configs()
     }
 }
