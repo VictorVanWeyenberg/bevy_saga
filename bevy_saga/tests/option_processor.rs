@@ -1,14 +1,14 @@
-use bevy::prelude::{App, Event, ResMut, Resource, Update};
+use bevy::prelude::{App, ResMut, Resource, Update};
 use bevy_saga::{RegisterSaga, Saga};
-use bevy_saga_macros::SagaEvent;
+use bevy_saga_macros::saga_event;
 
 #[derive(Default, Resource)]
 struct Counter(u8);
 
-#[derive(SagaEvent, Event, Clone)]
+#[saga_event]
 struct Input;
 
-#[derive(SagaEvent, Event, Clone)]
+#[saga_event]
 struct Output(u8);
 
 fn success(_: Input) -> Option<Output> {

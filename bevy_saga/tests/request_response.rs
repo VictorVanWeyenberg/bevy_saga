@@ -1,17 +1,16 @@
-use bevy::app::{App, Update};
-use bevy::prelude::{Event, ResMut, Resource};
+use bevy::prelude::{App, Update, ResMut, Resource};
 use bevy_saga::RegisterSaga;
-use bevy_saga_macros::SagaEvent;
+use bevy_saga_macros::saga_event;
 
 #[derive(Default, Resource)]
 struct Counter(u8);
 
-#[derive(Clone, Event, SagaEvent)]
+#[saga_event]
 struct Request {
     to: String,
 }
 
-#[derive(SagaEvent, Event, Clone)]
+#[saga_event]
 struct Response {
     message: String,
 }

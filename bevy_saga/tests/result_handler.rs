@@ -1,8 +1,7 @@
-use bevy::app::{App, Update};
-use bevy::prelude::{Event, ResMut, Resource};
+use bevy::prelude::{App, Update, ResMut, Resource};
 use bevy_saga::ErrStage;
 use bevy_saga::{OkStage, RegisterSaga, Saga};
-use bevy_saga_macros::SagaEvent;
+use bevy_saga_macros::saga_event;
 
 #[derive(Default, Resource)]
 struct Counter(u8);
@@ -13,13 +12,13 @@ enum OkOrErr {
     Err,
 }
 
-#[derive(SagaEvent, Event, Clone)]
+#[saga_event]
 struct Input(OkOrErr);
 
-#[derive(SagaEvent, Event, Clone)]
+#[saga_event]
 struct OkPath(u8);
 
-#[derive(SagaEvent, Event, Clone)]
+#[saga_event]
 struct ErrPath(u8);
 
 fn result_processor(Input(input): Input) -> Result<OkPath, ErrPath> {

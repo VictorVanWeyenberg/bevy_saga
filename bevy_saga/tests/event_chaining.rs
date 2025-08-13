@@ -1,23 +1,23 @@
 use bevy::app::{App, Update};
-use bevy::prelude::{Component, Entity, Event, Query, ResMut, Resource};
+use bevy::prelude::{Component, Entity, Query, ResMut, Resource};
 use bevy_saga::RegisterSaga;
-use bevy_saga_macros::SagaEvent;
+use bevy_saga_macros::saga_event;
 
 #[derive(Default, Resource)]
 struct Counter(u8);
 
-#[derive(SagaEvent, Event, Clone)]
+#[saga_event]
 struct Input {
     entity: Entity,
 }
 
-#[derive(SagaEvent, Event, Clone)]
+#[saga_event]
 enum Intermediary {
     Ok { entity: Entity },
     Err { message: String },
 }
 
-#[derive(SagaEvent, Event, Clone)]
+#[saga_event]
 enum Output {
     Ok { entity: Entity },
     Err { message: String },

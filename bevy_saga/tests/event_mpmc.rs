@@ -1,23 +1,23 @@
-use bevy::prelude::{App, Event, ResMut, Resource, Update};
+use bevy::prelude::{App, ResMut, Resource, Update};
 use bevy_saga::RegisterSaga;
-use bevy_saga_macros::SagaEvent;
+use bevy_saga_macros::saga_event;
 
 #[derive(Default, Resource)]
 struct EventsConsumed(usize);
 
-#[derive(Clone, Event, SagaEvent)]
+#[saga_event]
 struct Producer;
 
-#[derive(Clone, Event, SagaEvent)]
+#[saga_event]
 struct Produced1;
 
-#[derive(Clone, Event, SagaEvent)]
+#[saga_event]
 struct Produced2;
 
-#[derive(Clone, Event, SagaEvent)]
+#[saga_event]
 struct Produced3;
 
-#[derive(Clone, Event, SagaEvent)]
+#[saga_event]
 struct Consumed;
 
 fn producer1(_: Producer) -> Produced1 {
