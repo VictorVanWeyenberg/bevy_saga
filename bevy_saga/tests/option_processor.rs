@@ -32,7 +32,12 @@ fn test<M>(saga: impl Saga<M>) -> u8 {
     app.world().resource::<Counter>().0
 }
 
-fn main() {
+#[test]
+fn test_success() {
     assert_eq!(test((success, then)), 4);
+}
+
+#[test]
+fn test_failure() {
     assert_eq!(test((failure, then)), 0);
 }

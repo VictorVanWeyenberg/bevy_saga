@@ -29,7 +29,11 @@ struct Name(String);
 #[derive(Component)]
 struct Health(usize);
 
-fn handle_input(Input { entity }: Input, query: Query<&Name>, mut counter: ResMut<Counter>) -> Intermediary {
+fn handle_input(
+    Input { entity }: Input,
+    query: Query<&Name>,
+    mut counter: ResMut<Counter>,
+) -> Intermediary {
     counter.0 += 1;
     if let Ok(Name(name)) = query.get(entity) {
         println!("Oh no, {name} is hit!");
@@ -41,7 +45,11 @@ fn handle_input(Input { entity }: Input, query: Query<&Name>, mut counter: ResMu
     }
 }
 
-fn handle_intermediary(response: Intermediary, mut query: Query<(&Name, &mut Health)>, mut counter: ResMut<Counter>) -> Output {
+fn handle_intermediary(
+    response: Intermediary,
+    mut query: Query<(&Name, &mut Health)>,
+    mut counter: ResMut<Counter>,
+) -> Output {
     counter.0 += 1;
     match response {
         Intermediary::Ok { entity } => {
@@ -73,14 +81,16 @@ fn read_output(output: Output, query: Query<(&Name, &Health)>, mut counter: ResM
     }
 }
 
+#[test]
 fn main() {
     let mut app = App::new();
     app.init_resource::<Counter>();
     app.add_saga(Update, (handle_input, handle_intermediary, read_output));
-    let player = app.world_mut().spawn((Name("Player".to_string()), Health(10))).id();
-    app.world_mut().send_event(Input {
-        entity: player
-    });
+    let player = app
+        .world_mut()
+        .spawn((Name("Player".to_string()), Health(10)))
+        .id();
+    app.world_mut().send_event(Input { entity: player });
     app.update();
     assert_eq!(app.world_mut().resource::<Counter>().0, 3);
 }

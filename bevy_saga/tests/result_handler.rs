@@ -1,6 +1,6 @@
-use bevy_saga::ErrStage;
 use bevy::app::{App, Update};
 use bevy::prelude::{Event, ResMut, Resource};
+use bevy_saga::ErrStage;
 use bevy_saga::{OkStage, RegisterSaga, Saga};
 use bevy_saga_macros::SagaEvent;
 
@@ -46,7 +46,18 @@ fn test<M>(saga: impl Saga<M>, input: OkOrErr) -> u8 {
     app.world().resource::<Counter>().0
 }
 
-fn main() {
-    assert_eq!(1, test(result_processor.ok(ok_path).err(err_path), OkOrErr::Ok));
-    assert_eq!(2, test(result_processor.ok(ok_path).err(err_path), OkOrErr::Err));
+#[test]
+fn test_ok() {
+    assert_eq!(
+        1,
+        test(result_processor.ok(ok_path).err(err_path), OkOrErr::Ok)
+    );
+}
+
+#[test]
+fn test_err() {
+    assert_eq!(
+        2,
+        test(result_processor.ok(ok_path).err(err_path), OkOrErr::Err)
+    );
 }

@@ -27,6 +27,7 @@ fn handle_output(_output: Output, mut counter: ResMut<Counter>) {
     counter.0 += 1;
 }
 
+#[test]
 fn main() {
     let mut app = App::new();
     app.init_resource::<Counter>();

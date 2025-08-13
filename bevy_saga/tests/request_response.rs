@@ -28,6 +28,7 @@ fn read_response(Response { message }: Response, mut counter: ResMut<Counter>) {
     println!("{}", message)
 }
 
+#[test]
 fn main() {
     let mut app = App::new();
     app.init_resource::<Counter>();

@@ -1,5 +1,5 @@
 use bevy::prelude::{App, Event, ResMut, Resource, Update};
-use bevy_saga::{RegisterSaga};
+use bevy_saga::RegisterSaga;
 use bevy_saga_macros::SagaEvent;
 
 #[derive(Default, Resource)]
@@ -49,6 +49,7 @@ fn consumer(_: Consumed, mut number_consumed: ResMut<EventsConsumed>) {
     println!("{} events consumed", number_consumed.0)
 }
 
+#[test]
 fn main() {
     let mut app = App::new();
     app.init_resource::<EventsConsumed>();
