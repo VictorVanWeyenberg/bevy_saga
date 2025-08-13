@@ -26,7 +26,7 @@ where
     In: SagaEvent,
     Out: Event,
     SPF1: SystemParamFunction<M1, In = In, Out = Option<Out>>,
-    SPF2: SystemParamFunction<M2, In = In, Out = Option<Out>>,
+    SPF2: SystemParamFunction<M2, In = In, Out = ()>,
     M1: 'static,
     M2: 'static,
 {
@@ -37,7 +37,7 @@ where
         let (spf1, spf2) = self;
         (
             app.add_option_processor::<In, Out, _>(spf1),
-            app.add_option_processor::<In, Out, _>(spf2),
+            app.add_event_handler::<In, _>(spf2),
         )
             .into_configs()
     }
@@ -49,8 +49,8 @@ where
     In: SagaEvent,
     Out: Event,
     SPF1: SystemParamFunction<M1, In = In, Out = Option<Out>>,
-    SPF2: SystemParamFunction<M2, In = In, Out = Option<Out>>,
-    SPF3: SystemParamFunction<M3, In = In, Out = Option<Out>>,
+    SPF2: SystemParamFunction<M2, In = In, Out = ()>,
+    SPF3: SystemParamFunction<M3, In = In, Out = ()>,
     M1: 'static,
     M2: 'static,
     M3: 'static,
@@ -62,8 +62,8 @@ where
         let (spf1, spf2, spf3) = self;
         (
             app.add_option_processor::<In, Out, _>(spf1),
-            app.add_option_processor::<In, Out, _>(spf2),
-            app.add_option_processor::<In, Out, _>(spf3),
+            app.add_event_handler::<In, _>(spf2),
+            app.add_event_handler::<In, _>(spf3),
         )
             .into_configs()
     }
@@ -75,9 +75,9 @@ where
     In: SagaEvent,
     Out: Event,
     SPF1: SystemParamFunction<M1, In = In, Out = Option<Out>>,
-    SPF2: SystemParamFunction<M2, In = In, Out = Option<Out>>,
-    SPF3: SystemParamFunction<M3, In = In, Out = Option<Out>>,
-    SPF4: SystemParamFunction<M4, In = In, Out = Option<Out>>,
+    SPF2: SystemParamFunction<M2, In = In, Out = ()>,
+    SPF3: SystemParamFunction<M3, In = In, Out = ()>,
+    SPF4: SystemParamFunction<M4, In = In, Out = ()>,
     M1: 'static,
     M2: 'static,
     M3: 'static,
@@ -90,9 +90,9 @@ where
         let (spf1, spf2, spf3, spf4) = self;
         (
             app.add_option_processor::<In, Out, _>(spf1),
-            app.add_option_processor::<In, Out, _>(spf2),
-            app.add_option_processor::<In, Out, _>(spf3),
-            app.add_option_processor::<In, Out, _>(spf4),
+            app.add_event_handler::<In, _>(spf2),
+            app.add_event_handler::<In, _>(spf3),
+            app.add_event_handler::<In, _>(spf4),
         )
             .into_configs()
     }

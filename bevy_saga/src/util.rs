@@ -1,40 +1,6 @@
 use crate::SagaEvent;
 use bevy::ecs::system::SystemId;
 use bevy::prelude::{Commands, Event, EventWriter, Events, In, Res, ResMut, Resource};
-use std::marker::PhantomData;
-
-#[derive(Resource)]
-pub struct EventProcessors<R, Rs>
-where
-    R: SagaEvent,
-    Rs: Sized + Send + Sync,
-{
-    ids: Vec<SystemId<R, ()>>,
-    _marker: PhantomData<Rs>,
-}
-
-impl<R, Rs> Default for EventProcessors<R, Rs>
-where
-    R: SagaEvent,
-    Rs: Sized + Send + Sync,
-{
-    fn default() -> Self {
-        EventProcessors {
-            ids: vec![],
-            _marker: PhantomData,
-        }
-    }
-}
-
-impl<R, Rs> EventProcessors<R, Rs>
-where
-    R: SagaEvent,
-    Rs: Sized + Send + Sync,
-{
-    pub fn push(&mut self, system_id: SystemId<R, ()>) {
-        self.ids.push(system_id)
-    }
-}
 
 #[derive(Resource)]
 pub struct EventHandlers<R>
@@ -64,7 +30,7 @@ where
 
 pub fn process_event<R, Rs>(
     mut reader: ResMut<Events<R>>,
-    handler: Res<EventProcessors<R, Rs>>,
+    handler: Res<EventHandlers<R>>,
     mut commands: Commands,
 ) where
     R: SagaEvent,

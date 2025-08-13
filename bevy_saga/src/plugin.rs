@@ -1,9 +1,6 @@
 use crate::SagaEvent;
 use crate::saga::Saga;
-use crate::util::{
-    EventHandlers, EventProcessors, handle_event, process_event, send_option_response,
-    send_response, send_result_response,
-};
+use crate::util::{EventHandlers, process_event, send_option_response, send_response, send_result_response, handle_event};
 use bevy::ecs::schedule::{ScheduleConfigs, ScheduleLabel};
 use bevy::ecs::system::ScheduleSystem;
 use bevy::prelude::{App, Event, IntoScheduleConfigs, IntoSystem};
@@ -69,10 +66,10 @@ impl BevySagaUtil for App {
         Rs: Event,
     {
         self.add_event::<R>();
-        self.init_resource::<EventProcessors<R, Rs>>();
+        self.init_resource::<EventHandlers<R>>();
         let id = self.register_system(handler.pipe(send_response::<Rs>));
         self.world_mut()
-            .resource_mut::<EventProcessors<R, Rs>>()
+            .resource_mut::<EventHandlers<R>>()
             .push(id);
         process_event::<R, Rs>.into_configs()
     }
@@ -86,10 +83,10 @@ impl BevySagaUtil for App {
         Rs: Event,
     {
         self.add_event::<R>();
-        self.init_resource::<EventProcessors<R, Rs>>();
+        self.init_resource::<EventHandlers<R>>();
         let id = self.register_system(handler.pipe(send_option_response::<Rs>));
         self.world_mut()
-            .resource_mut::<EventProcessors<R, Rs>>()
+            .resource_mut::<EventHandlers<R>>()
             .push(id);
         process_event::<R, Rs>.into_configs()
     }

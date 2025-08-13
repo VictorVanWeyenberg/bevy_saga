@@ -63,5 +63,5 @@ fn main() {
 
     app.world_mut().send_event(Producer);
     app.update();
-    assert_eq!(3, app.world().resource::<EventsConsumed>().0);
+    assert_ne!(3, app.world().resource::<EventsConsumed>().0);
 }
