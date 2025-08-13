@@ -1,7 +1,10 @@
 use bevy::app::{App, Update};
-use bevy::prelude::{Component, Entity, Event, Query};
+use bevy::prelude::{Component, Entity, Event, Query, ResMut, Resource};
 use bevy_saga::RegisterSaga;
 use bevy_saga_macros::SagaEvent;
+
+#[derive(Default, Resource)]
+struct Counter(u8);
 
 #[derive(SagaEvent, Event, Clone)]
 struct Input {
@@ -26,7 +29,8 @@ struct Name(String);
 #[derive(Component)]
 struct Health(usize);
 
-fn handle_input(Input { entity }: Input, query: Query<&Name>) -> Intermediary {
+fn handle_input(Input { entity }: Input, query: Query<&Name>, mut counter: ResMut<Counter>) -> Intermediary {
+    counter.0 += 1;
     if let Ok(Name(name)) = query.get(entity) {
         println!("Oh no, {name} is hit!");
         Intermediary::Ok { entity }
@@ -37,7 +41,8 @@ fn handle_input(Input { entity }: Input, query: Query<&Name>) -> Intermediary {
     }
 }
 
-fn handle_intermediary(response: Intermediary, mut query: Query<(&Name, &mut Health)>) -> Output {
+fn handle_intermediary(response: Intermediary, mut query: Query<(&Name, &mut Health)>, mut counter: ResMut<Counter>) -> Output {
+    counter.0 += 1;
     match response {
         Intermediary::Ok { entity } => {
             if let Ok((Name(name), mut health)) = query.get_mut(entity) {
@@ -54,7 +59,8 @@ fn handle_intermediary(response: Intermediary, mut query: Query<(&Name, &mut Hea
     }
 }
 
-fn read_output(output: Output, query: Query<(&Name, &Health)>) {
+fn read_output(output: Output, query: Query<(&Name, &Health)>, mut counter: ResMut<Counter>) {
+    counter.0 += 1;
     match output {
         Output::Ok { entity } => {
             if let Ok((Name(name), Health(health))) = query.get(entity) {
@@ -69,14 +75,12 @@ fn read_output(output: Output, query: Query<(&Name, &Health)>) {
 
 fn main() {
     let mut app = App::new();
+    app.init_resource::<Counter>();
     app.add_saga(Update, (handle_input, handle_intermediary, read_output));
-    let victor = app.world_mut().spawn((Name("Victor".to_string()), Health(10))).id();
-    let luna = app.world_mut().spawn((Name("Luna".to_string()), Health(10))).id();
-    app.world_mut().commands().send_event(Input {
-        entity: victor
-    });
-    app.world_mut().commands().send_event(Input {
-        entity: luna
+    let player = app.world_mut().spawn((Name("Player".to_string()), Health(10))).id();
+    app.world_mut().send_event(Input {
+        entity: player
     });
     app.update();
+    assert_eq!(app.world_mut().resource::<Counter>().0, 3);
 }
