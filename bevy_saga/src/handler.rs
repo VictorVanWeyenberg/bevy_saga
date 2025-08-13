@@ -1,16 +1,15 @@
-use bevy::ecs::schedule::ScheduleLabel;
-use crate::{
-    plugin::BevySagaUtil,
-    SagaEvent,
-};
-use bevy::prelude::{App, SystemParamFunction};
+use crate::{plugin::BevySagaUtil, SagaEvent};
+use bevy::ecs::schedule::ScheduleConfigs;
+use bevy::ecs::system::ScheduleSystem;
+use bevy::prelude::{App, IntoScheduleConfigs, SystemParamFunction};
 
 pub trait EventHandler<M> {
     type In: SagaEvent;
 
-    fn register_handler<Label>(self, label: Label, app: &mut App)
-where
-    Label: ScheduleLabel + Clone;
+    fn register_handler(
+        self,
+        app: &mut App,
+    ) -> ScheduleConfigs<ScheduleSystem>;
 }
 
 impl<SPF, M, In> EventHandler<(M,)> for SPF
@@ -21,10 +20,12 @@ where
 {
     type In = In;
 
-    fn register_handler<Label>(self, _label: Label, app: &mut App)
-where
-    Label: ScheduleLabel + Clone {
-        app.add_event_handler::<In, _>(self);
+    fn register_handler(
+        self,
+        app: &mut App,
+    ) -> ScheduleConfigs<ScheduleSystem>
+    {
+        app.add_event_handler::<In, _>(self)
     }
 }
 
@@ -38,12 +39,17 @@ where
 {
     type In = In;
 
-    fn register_handler<Label>(self, _label: Label, app: &mut App)
-where
-    Label: ScheduleLabel + Clone {
+    fn register_handler(
+        self,
+        app: &mut App,
+    ) -> ScheduleConfigs<ScheduleSystem>
+    {
         let (spf1, spf2) = self;
-        app.add_event_handler::<In, _>(spf1);
-        app.add_event_handler::<In, _>(spf2);
+        (
+            app.add_event_handler::<In, _>(spf1),
+            app.add_event_handler::<In, _>(spf2),
+        )
+            .into_configs()
     }
 }
 
@@ -59,17 +65,23 @@ where
 {
     type In = In;
 
-    fn register_handler<Label>(self, _label: Label, app: &mut App)
-where
-    Label: ScheduleLabel + Clone {
+    fn register_handler(
+        self,
+        app: &mut App,
+    ) -> ScheduleConfigs<ScheduleSystem>
+    {
         let (spf1, spf2, spf3) = self;
-        app.add_event_handler::<In, _>(spf1);
-        app.add_event_handler::<In, _>(spf2);
-        app.add_event_handler::<In, _>(spf3);
+        (
+            app.add_event_handler::<In, _>(spf1),
+            app.add_event_handler::<In, _>(spf2),
+            app.add_event_handler::<In, _>(spf3),
+        )
+            .into_configs()
     }
 }
 
-impl<SPF1, SPF2, SPF3, SPF4, M1, M2, M3, M4, In> EventHandler<(M1, M2, M3, M4)> for (SPF1, SPF2, SPF3, SPF4)
+impl<SPF1, SPF2, SPF3, SPF4, M1, M2, M3, M4, In> EventHandler<(M1, M2, M3, M4)>
+    for (SPF1, SPF2, SPF3, SPF4)
 where
     In: SagaEvent,
     SPF1: SystemParamFunction<M1, In = In, Out = ()>,
@@ -83,14 +95,18 @@ where
 {
     type In = In;
 
-    fn register_handler<Label>(self, _label: Label, app: &mut App)
-where
-    Label: ScheduleLabel + Clone {
+    fn register_handler(
+        self,
+        app: &mut App,
+    ) -> ScheduleConfigs<ScheduleSystem>
+    {
         let (spf1, spf2, spf3, spf4) = self;
-        app.add_event_handler::<In, _>(spf1);
-        app.add_event_handler::<In, _>(spf2);
-        app.add_event_handler::<In, _>(spf3);
-        app.add_event_handler::<In, _>(spf4);
+        (
+            app.add_event_handler::<In, _>(spf1),
+            app.add_event_handler::<In, _>(spf2),
+            app.add_event_handler::<In, _>(spf3),
+            app.add_event_handler::<In, _>(spf4),
+        )
+            .into_configs()
     }
 }
-

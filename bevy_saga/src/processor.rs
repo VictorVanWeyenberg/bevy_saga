@@ -1,14 +1,13 @@
-use crate::{
-    plugin::BevySagaUtil,
-    SagaEvent,
-};
-use bevy::prelude::{App, Event, SystemParamFunction};
+use crate::{SagaEvent, plugin::BevySagaUtil};
+use bevy::ecs::schedule::ScheduleConfigs;
+use bevy::ecs::system::ScheduleSystem;
+use bevy::prelude::{App, Event, IntoScheduleConfigs, SystemParamFunction};
 
 pub trait EventProcessor<M> {
     type In: SagaEvent;
     type Out: Event;
 
-    fn register_processor(self, app: &mut App);
+    fn register_processor(self, app: &mut App) -> ScheduleConfigs<ScheduleSystem>;
 }
 
 impl<SPF, M, In, Out> EventProcessor<(M,)> for SPF
@@ -21,8 +20,8 @@ where
     type In = In;
     type Out = Out;
 
-    fn register_processor(self, app: &mut App) {
-        app.add_event_processor::<In, Out, _>(self);
+    fn register_processor(self, app: &mut App) -> ScheduleConfigs<ScheduleSystem> {
+        app.add_event_processor::<In, Out, _>(self)
     }
 }
 
@@ -38,10 +37,13 @@ where
     type In = In;
     type Out = Out;
 
-    fn register_processor(self, app: &mut App) {
+    fn register_processor(self, app: &mut App) -> ScheduleConfigs<ScheduleSystem> {
         let (spf1, spf2) = self;
-        app.add_event_processor::<In, Out, _>(spf1);
-        app.add_event_processor::<In, Out, _>(spf2);
+        (
+            app.add_event_processor::<In, Out, _>(spf1),
+            app.add_event_processor::<In, Out, _>(spf2),
+        )
+            .into_configs()
     }
 }
 
@@ -59,15 +61,19 @@ where
     type In = In;
     type Out = Out;
 
-    fn register_processor(self, app: &mut App) {
+    fn register_processor(self, app: &mut App) -> ScheduleConfigs<ScheduleSystem> {
         let (spf1, spf2, spf3) = self;
-        app.add_event_processor::<In, Out, _>(spf1);
-        app.add_event_processor::<In, Out, _>(spf2);
-        app.add_event_processor::<In, Out, _>(spf3);
+        (
+            app.add_event_processor::<In, Out, _>(spf1),
+            app.add_event_processor::<In, Out, _>(spf2),
+            app.add_event_processor::<In, Out, _>(spf3),
+        )
+            .into_configs()
     }
 }
 
-impl<SPF1, SPF2, SPF3, SPF4, M1, M2, M3, M4, In, Out> EventProcessor<(M1, M2, M3, M4)> for (SPF1, SPF2, SPF3, SPF4)
+impl<SPF1, SPF2, SPF3, SPF4, M1, M2, M3, M4, In, Out> EventProcessor<(M1, M2, M3, M4)>
+    for (SPF1, SPF2, SPF3, SPF4)
 where
     In: SagaEvent,
     Out: Event,
@@ -83,12 +89,14 @@ where
     type In = In;
     type Out = Out;
 
-    fn register_processor(self, app: &mut App) {
+    fn register_processor(self, app: &mut App) -> ScheduleConfigs<ScheduleSystem> {
         let (spf1, spf2, spf3, spf4) = self;
-        app.add_event_processor::<In, Out, _>(spf1);
-        app.add_event_processor::<In, Out, _>(spf2);
-        app.add_event_processor::<In, Out, _>(spf3);
-        app.add_event_processor::<In, Out, _>(spf4);
+        (
+            app.add_event_processor::<In, Out, _>(spf1),
+            app.add_event_processor::<In, Out, _>(spf2),
+            app.add_event_processor::<In, Out, _>(spf3),
+            app.add_event_processor::<In, Out, _>(spf4),
+        )
+            .into_configs()
     }
 }
-

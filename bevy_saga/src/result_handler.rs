@@ -2,8 +2,9 @@ use crate::handler::EventHandler;
 use crate::plugin::BevySagaUtil;
 use crate::{Saga, SagaEvent};
 use bevy::app::App;
-use bevy::ecs::schedule::ScheduleLabel;
-use bevy::prelude::SystemParamFunction;
+use bevy::ecs::schedule::ScheduleConfigs;
+use bevy::ecs::system::ScheduleSystem;
+use bevy::prelude::{IntoScheduleConfigs, SystemParamFunction};
 
 pub struct ResultHandler<ResultSource, OkSaga, ErrSaga> {
     result_source: ResultSource,
@@ -16,7 +17,7 @@ pub struct ResultHandlerM<T>(T);
 impl<ResultSource, OkSaga, ErrSaga, MRS, MOP, MEP> EventHandler<ResultHandlerM<(MRS, MOP, MEP)>>
     for ResultHandler<ResultSource, OkSaga, ErrSaga>
 where
-    ResultSource: SystemParamFunction<MRS, Out=Result<OkSaga::In, ErrSaga::In>>,
+    ResultSource: SystemParamFunction<MRS, Out = Result<OkSaga::In, ErrSaga::In>>,
     ResultSource::In: SagaEvent,
     OkSaga: Saga<MOP>,
     ErrSaga: Saga<MEP>,
@@ -28,30 +29,30 @@ where
 {
     type In = ResultSource::In;
 
-    fn register_handler<Label>(self, label: Label, app: &mut App)
-    where
-        Label: ScheduleLabel + Clone,
-    {
+    fn register_handler(self, app: &mut App) -> ScheduleConfigs<ScheduleSystem> {
         let ResultHandler {
             result_source,
             ok_saga,
             err_saga,
         } = self;
-        app.add_result_handler(result_source);
-        ok_saga.register(label.clone(), app);
-        err_saga.register(label.clone(), app);
+
+        (
+            app.add_result_handler(result_source),
+            (ok_saga.register(app), err_saga.register(app)).into_configs(),
+        )
+            .chain()
     }
 }
 
 pub trait OkStage<RS, MRS, Ok, Err>
 where
-    RS: SystemParamFunction<MRS, Out=Result<Ok, Err>>,
+    RS: SystemParamFunction<MRS, Out = Result<Ok, Err>>,
     RS::In: SagaEvent,
 {
     fn ok<OkSaga, MOP>(self, ok_saga: OkSaga) -> impl ErrStage<RS, MRS, MOP, Ok, Err>
     where
         MOP: 'static,
-        OkSaga: Saga<MOP, In=Ok>;
+        OkSaga: Saga<MOP, In = Ok>;
 }
 
 pub trait ErrStage<RS, MRS, MOP, Ok, Err> {
@@ -61,7 +62,7 @@ pub trait ErrStage<RS, MRS, MOP, Ok, Err> {
     ) -> impl EventHandler<ResultHandlerM<(MRS, MOP, MEP)>>
     where
         MEP: 'static,
-        ErrSaga: Saga<MEP, In=Err>;
+        ErrSaga: Saga<MEP, In = Err>;
 }
 
 struct OkBuilderStage<ResultSource, OkSaga> {
@@ -71,7 +72,7 @@ struct OkBuilderStage<ResultSource, OkSaga> {
 
 impl<RS, MRS, Ok, Err> OkStage<RS, MRS, Ok, Err> for RS
 where
-    RS: SystemParamFunction<MRS, Out=Result<Ok, Err>>,
+    RS: SystemParamFunction<MRS, Out = Result<Ok, Err>>,
     RS::In: SagaEvent,
     Ok: SagaEvent,
     Err: SagaEvent,
@@ -80,7 +81,7 @@ where
     fn ok<OkSaga, MOP>(self, ok_saga: OkSaga) -> impl ErrStage<RS, MRS, MOP, Ok, Err>
     where
         MOP: 'static,
-        OkSaga: Saga<MOP, In=Ok>,
+        OkSaga: Saga<MOP, In = Ok>,
     {
         OkBuilderStage {
             result_source: self,
@@ -91,9 +92,9 @@ where
 
 impl<RS, MRS, MOP, OkSaga, Ok, Err> ErrStage<RS, MRS, MOP, Ok, Err> for OkBuilderStage<RS, OkSaga>
 where
-    RS: SystemParamFunction<MRS, Out=Result<Ok, Err>>,
+    RS: SystemParamFunction<MRS, Out = Result<Ok, Err>>,
     RS::In: SagaEvent,
-    OkSaga: Saga<MOP, In=Ok>,
+    OkSaga: Saga<MOP, In = Ok>,
     Ok: SagaEvent,
     Err: SagaEvent,
     MRS: 'static,
@@ -105,7 +106,7 @@ where
     ) -> impl EventHandler<ResultHandlerM<(MRS, MOP, MEP)>>
     where
         MEP: 'static,
-        ErrSaga: Saga<MEP, In=Err>,
+        ErrSaga: Saga<MEP, In = Err>,
     {
         let OkBuilderStage {
             result_source,
