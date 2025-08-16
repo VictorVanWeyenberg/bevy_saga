@@ -1,7 +1,7 @@
-use crate::SagaEvent;
 use crate::handler::EventHandler;
 use crate::processor::EventProcessor;
-use crate::util::{handle_event, process_event};
+use crate::util::process_event;
+use crate::SagaEvent;
 use bevy::ecs::schedule::ScheduleConfigs;
 use bevy::ecs::system::ScheduleSystem;
 use bevy::prelude::{App, IntoScheduleConfigs};
@@ -56,9 +56,9 @@ where
         s2.register_processor(app);
         s3.register_handler(app);
         (
-            process_event::<S1::In, S1::Out>,
-            process_event::<S2::In, S2::Out>,
-            handle_event::<S3::In>,
+            process_event::<S1::In>,
+            process_event::<S2::In>,
+            process_event::<S3::In>,
         )
             .chain()
     }
@@ -84,10 +84,10 @@ where
         s3.register_processor(app);
         s4.register_handler(app);
         (
-            process_event::<S1::In, S1::Out>,
-            process_event::<S2::In, S2::Out>,
-            process_event::<S3::In, S3::Out>,
-            handle_event::<S4::In>,
+            process_event::<S1::In>,
+            process_event::<S2::In>,
+            process_event::<S3::In>,
+            process_event::<S4::In>,
         )
             .chain()
     }

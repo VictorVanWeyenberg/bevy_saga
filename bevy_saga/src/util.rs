@@ -28,13 +28,12 @@ where
     }
 }
 
-pub fn process_event<R, Rs>(
+pub fn process_event<R>(
     mut reader: ResMut<Events<R>>,
     handler: Res<EventProcessors<R>>,
     mut commands: Commands,
 ) where
     R: SagaEvent,
-    Rs: Event,
 {
     for event in reader.drain() {
         for id in &handler.ids {
@@ -71,19 +70,5 @@ where
         Err(err) => {
             err_writer.write(err);
         },
-    }
-}
-
-pub fn handle_event<R>(
-    mut reader: ResMut<Events<R>>,
-    handler: Res<EventProcessors<R>>,
-    mut commands: Commands,
-) where
-    R: SagaEvent,
-{
-    for event in reader.drain() {
-        for id in &handler.ids {
-            commands.run_system_with(*id, event.clone())
-        }
     }
 }
