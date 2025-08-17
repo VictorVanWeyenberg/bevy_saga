@@ -20,21 +20,21 @@ trait OneStage<Source, MarkerSource> {
     fn one<OneSaga, MarkerOneSaga>(
         self,
         one_sage: OneSaga,
-    ) -> impl TwoStage<Source, OneSaga, MarkerSource>
+    ) -> impl TwoStage<Source, MarkerSource, OneSaga>
     where
         OneSaga: bevy_saga::Saga<MarkerOneSaga, In = One>;
 }
 
-trait TwoStage<Source, OneSaga, MarkerSource> {
+trait TwoStage<Source, MarkerSource, OneSaga> {
     fn two<TwoSaga, MarkerTwoSaga>(
         self,
         two_saga: TwoSaga,
-    ) -> impl ThreeStage<Source, OneSaga, TwoSaga, MarkerSource>
+    ) -> impl ThreeStage<Source, MarkerSource, OneSaga, TwoSaga>
     where
         TwoSaga: bevy_saga::Saga<MarkerTwoSaga, In = Two>;
 }
 
-trait ThreeStage<Source, OneSaga, TwoSaga, MarkerSource> {
+trait ThreeStage<Source, MarkerSource, OneSaga, TwoSaga> {
     fn three<ThreeSaga, MarkerThreeSaga>(
         self,
         three_saga: ThreeSaga,
@@ -82,7 +82,7 @@ where
     fn one<OneSaga, MarkerOneSaga>(
         self,
         one_sage: OneSaga,
-    ) -> impl TwoStage<Source, OneSaga, MarkerSource>
+    ) -> impl TwoStage<Source, MarkerSource, OneSaga>
     where
         OneSaga: bevy_saga::Saga<MarkerOneSaga, In = One>,
     {
@@ -90,7 +90,7 @@ where
     }
 }
 
-impl<Source, OneSaga, MarkerSource> TwoStage<Source, OneSaga, MarkerSource>
+impl<Source, OneSaga, MarkerSource> TwoStage<Source, MarkerSource, OneSaga>
     for OneStageBuilder<Source, OneSaga>
 where
     Source: bevy::prelude::SystemParamFunction<MarkerSource, Out =RoutedEvent>,
@@ -100,7 +100,7 @@ where
     fn two<TwoSaga, MarkerTwoSaga>(
         self,
         two_saga: TwoSaga,
-    ) -> impl ThreeStage<Source, OneSaga, TwoSaga, MarkerSource>
+    ) -> impl ThreeStage<Source, MarkerSource, OneSaga, TwoSaga>
     where
         TwoSaga: bevy_saga::Saga<MarkerTwoSaga, In = Two>,
     {
@@ -108,7 +108,7 @@ where
     }
 }
 
-impl<Source, OneSaga, TwoSaga, MarkerSource> ThreeStage<Source, OneSaga, TwoSaga, MarkerSource>
+impl<Source, OneSaga, TwoSaga, MarkerSource> ThreeStage<Source, MarkerSource, OneSaga, TwoSaga>
     for TwoStageBuilder<Source, OneSaga, TwoSaga>
 where
     Source: bevy::prelude::SystemParamFunction<MarkerSource, Out =RoutedEvent>,

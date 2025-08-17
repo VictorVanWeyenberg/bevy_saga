@@ -207,7 +207,7 @@ pub fn source_field() -> EventHandlerField {
     }
 }
 
-fn variants_to_event_handler_variant_context((ident, ty): (&Ident, &Type)) -> EventHandlerField {
+fn variants_to_event_handler_variant_context((ident, ty): &(Ident, Type)) -> EventHandlerField {
     let variant_name = Some(ident.clone());
     let variant_type = Some(ty.clone());
     let handler_field_name = format_ident!("{}", ident.clone().to_string().to_lowercase());

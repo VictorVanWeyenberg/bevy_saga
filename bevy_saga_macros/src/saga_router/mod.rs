@@ -1,14 +1,13 @@
+use crate::saga_router::event_handler::generate_event_handler;
 use proc_macro2::{Ident, TokenStream};
 use quote::quote;
-use std::collections::HashMap;
 use syn::{Fields, ItemEnum, Type};
-use crate::saga_router::event_handler::generate_event_handler;
 
 mod event_handler;
 
 struct InputEnumMetaData {
     enum_ident: Ident,
-    variants_and_types: HashMap<Ident, Type>,
+    variants_and_types: Vec<(Ident, Type)>,
 }
 
 pub fn saga_router_from_enum(item_enum: ItemEnum) -> TokenStream {
@@ -32,7 +31,7 @@ fn generate_routing_context(meta_data: InputEnumMetaData) -> TokenStream {
 }
 
 fn validate_input(item_enum: &ItemEnum) -> Result<InputEnumMetaData, TokenStream> {
-    let mut variants_and_types = HashMap::new();
+    let mut variants_and_types = vec![];
     for variant in item_enum.variants.iter() {
         let variant_ident = variant.ident.clone();
         match &variant.fields {
@@ -45,7 +44,7 @@ fn validate_input(item_enum: &ItemEnum) -> Result<InputEnumMetaData, TokenStream
                 if count > 1 {
                     return Err(compile_error("Variant with more than 1 unnamed fields. Only variants with one unnamed field are allowed for routing."))
                 }
-                variants_and_types.insert(variant_ident, unnamed_fields.unnamed.first().unwrap().ty.clone());
+                variants_and_types.push((variant_ident, unnamed_fields.unnamed.first().unwrap().ty.clone()));
             }
             Fields::Unit => return Err(compile_error("Unit variant. Only variants with one unnamed field are allowed for routing.")),
         }
