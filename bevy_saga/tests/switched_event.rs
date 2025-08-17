@@ -1,19 +1,17 @@
-use bevy_saga::{EventHandler, Saga, SagaEvent};
-use bevy_saga_macros::saga_event;
-
+#[bevy_saga_macros::saga_router]
 enum RoutedEvent {
     One(One),
     Two(Two),
     Three(Three),
 }
 
-#[saga_event]
+#[bevy_saga_macros::saga_event]
 struct One;
 
-#[saga_event]
+#[bevy_saga_macros::saga_event]
 struct Two;
 
-#[saga_event]
+#[bevy_saga_macros::saga_event]
 struct Three;
 
 // Traits
@@ -24,7 +22,7 @@ trait OneStage<Source, MarkerSource> {
         one_sage: OneSaga,
     ) -> impl TwoStage<Source, OneSaga, MarkerSource>
     where
-        OneSaga: Saga<MarkerOneSaga, In = One>;
+        OneSaga: bevy_saga::Saga<MarkerOneSaga, In = One>;
 }
 
 trait TwoStage<Source, OneSaga, MarkerSource> {
@@ -33,76 +31,16 @@ trait TwoStage<Source, OneSaga, MarkerSource> {
         two_saga: TwoSaga,
     ) -> impl ThreeStage<Source, OneSaga, TwoSaga, MarkerSource>
     where
-        TwoSaga: Saga<MarkerTwoSaga, In = Two>;
+        TwoSaga: bevy_saga::Saga<MarkerTwoSaga, In = Two>;
 }
 
 trait ThreeStage<Source, OneSaga, TwoSaga, MarkerSource> {
     fn three<ThreeSaga, MarkerThreeSaga>(
         self,
         three_saga: ThreeSaga,
-    ) -> RoutedEventHandler<Source, OneSaga, TwoSaga, ThreeSaga>
+    ) -> RoutedEventRouter<Source, OneSaga, TwoSaga, ThreeSaga>
     where
-        ThreeSaga: Saga<MarkerThreeSaga, In = Three>;
-}
-
-// Handler
-
-struct RoutedEventHandler<Source, OneSaga, TwoSaga, ThreeSaga> {
-    source: Source,
-    one: OneSaga,
-    two: TwoSaga,
-    three: ThreeSaga,
-}
-
-impl<Source, OneSaga, TwoSaga, ThreeSaga>
-    RoutedEventHandler<Source, OneSaga, TwoSaga, ThreeSaga>
-{
-    pub fn new(source: Source, one: OneSaga, two: TwoSaga, three: ThreeSaga) -> Self {
-        Self {
-            source,
-            one,
-            two,
-            three,
-        }
-    }
-}
-
-impl<
-    Source,
-    OneSaga,
-    TwoSaga,
-    ThreeSaga,
-    MarkerSource,
-    MarkerOneSaga,
-    MarkerTwoSaga,
-    MarkerThreeSaga,
-> EventHandler<(MarkerSource, MarkerOneSaga, MarkerTwoSaga, MarkerThreeSaga)>
-    for RoutedEventHandler<Source, OneSaga, TwoSaga, ThreeSaga>
-where
-    Source: bevy::prelude::SystemParamFunction<MarkerSource, Out =RoutedEvent>,
-    Source::In: SagaEvent,
-    OneSaga: Saga<MarkerOneSaga, In = One>,
-    TwoSaga: Saga<MarkerTwoSaga, In = Two>,
-    ThreeSaga: Saga<MarkerThreeSaga, In = Three>,
-    MarkerSource: 'static,
-{
-    type In = Source::In;
-
-    fn register_handler(
-        self,
-        app: &mut bevy::prelude::App,
-    ) -> bevy::ecs::schedule::ScheduleConfigs<bevy::ecs::system::ScheduleSystem> {
-        let RoutedEventHandler {
-            source,
-            one,
-            two,
-            three,
-        } = self;
-        bevy::prelude::IntoScheduleConfigs::chain((
-            app.add_routed_event_handler(source),
-            (one.register(app), two.register(app), three.register(app)),
-        ))
-    }
+        ThreeSaga: bevy_saga::Saga<MarkerThreeSaga, In = Three>;
 }
 
 // Builder
@@ -138,7 +76,7 @@ impl<Source, OneSaga, TwoSaga> TwoStageBuilder<Source, OneSaga, TwoSaga> {
 impl<Source, MarkerSource> OneStage<Source, MarkerSource> for Source
 where
     Source: bevy::prelude::SystemParamFunction<MarkerSource, Out =RoutedEvent>,
-    Source::In: SagaEvent,
+    Source::In: bevy_saga::SagaEvent,
     MarkerSource: 'static,
 {
     fn one<OneSaga, MarkerOneSaga>(
@@ -146,7 +84,7 @@ where
         one_sage: OneSaga,
     ) -> impl TwoStage<Source, OneSaga, MarkerSource>
     where
-        OneSaga: Saga<MarkerOneSaga, In = One>,
+        OneSaga: bevy_saga::Saga<MarkerOneSaga, In = One>,
     {
         OneStageBuilder::new(self, one_sage)
     }
@@ -156,7 +94,7 @@ impl<Source, OneSaga, MarkerSource> TwoStage<Source, OneSaga, MarkerSource>
     for OneStageBuilder<Source, OneSaga>
 where
     Source: bevy::prelude::SystemParamFunction<MarkerSource, Out =RoutedEvent>,
-    Source::In: SagaEvent,
+    Source::In: bevy_saga::SagaEvent,
     MarkerSource: 'static,
 {
     fn two<TwoSaga, MarkerTwoSaga>(
@@ -164,7 +102,7 @@ where
         two_saga: TwoSaga,
     ) -> impl ThreeStage<Source, OneSaga, TwoSaga, MarkerSource>
     where
-        TwoSaga: Saga<MarkerTwoSaga, In = Two>,
+        TwoSaga: bevy_saga::Saga<MarkerTwoSaga, In = Two>,
     {
         TwoStageBuilder::new(self, two_saga)
     }
@@ -174,17 +112,17 @@ impl<Source, OneSaga, TwoSaga, MarkerSource> ThreeStage<Source, OneSaga, TwoSaga
     for TwoStageBuilder<Source, OneSaga, TwoSaga>
 where
     Source: bevy::prelude::SystemParamFunction<MarkerSource, Out =RoutedEvent>,
-    Source::In: SagaEvent,
+    Source::In: bevy_saga::SagaEvent,
 {
     fn three<ThreeSaga, MarkerThreeSaga>(
         self,
         three_saga: ThreeSaga,
-    ) -> RoutedEventHandler<Source, OneSaga, TwoSaga, ThreeSaga>
+    ) -> RoutedEventRouter<Source, OneSaga, TwoSaga, ThreeSaga>
     where
-        ThreeSaga: Saga<MarkerThreeSaga, In = Three>,
+        ThreeSaga: bevy_saga::Saga<MarkerThreeSaga, In = Three>,
     {
         let TwoStageBuilder { source, one, two } = self;
-        RoutedEventHandler::new(source, one, two, three_saga)
+        RoutedEventRouter::new(source, one, two, three_saga)
     }
 }
 
@@ -196,7 +134,7 @@ trait RoutedEventPlugin {
         handler: impl bevy::prelude::IntoSystem<R, RoutedEvent, M> + 'static,
     ) -> bevy::ecs::schedule::ScheduleConfigs<bevy::ecs::system::ScheduleSystem>
     where
-        R: SagaEvent;
+        R: bevy_saga::SagaEvent;
 }
 
 impl RoutedEventPlugin for bevy::prelude::App {
@@ -205,7 +143,7 @@ impl RoutedEventPlugin for bevy::prelude::App {
         handler: impl bevy::prelude::IntoSystem<R, RoutedEvent, M> + 'static,
     ) -> bevy::ecs::schedule::ScheduleConfigs<bevy::ecs::system::ScheduleSystem>
     where
-        R: SagaEvent,
+        R: bevy_saga::SagaEvent,
     {
         self.add_event::<R>();
         self.init_resource::<bevy_saga::EventProcessors<R>>();
