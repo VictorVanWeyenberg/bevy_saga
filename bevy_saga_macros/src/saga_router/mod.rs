@@ -4,10 +4,16 @@ use quote::quote;
 use syn::{Fields, ItemEnum, Type};
 
 mod event_handler;
+mod util;
 
 struct InputEnumMetaData {
     enum_ident: Ident,
-    variants_and_types: Vec<(Ident, Type)>,
+    variants: Vec<InputVariantMetaData>,
+}
+
+struct InputVariantMetaData {
+    ident: Ident,
+    ty: Type,
 }
 
 pub fn saga_router_from_enum(item_enum: ItemEnum) -> TokenStream {
@@ -31,7 +37,7 @@ fn generate_routing_context(meta_data: InputEnumMetaData) -> TokenStream {
 }
 
 fn validate_input(item_enum: &ItemEnum) -> Result<InputEnumMetaData, TokenStream> {
-    let mut variants_and_types = vec![];
+    let mut variants = vec![];
     for variant in item_enum.variants.iter() {
         let variant_ident = variant.ident.clone();
         match &variant.fields {
@@ -44,14 +50,14 @@ fn validate_input(item_enum: &ItemEnum) -> Result<InputEnumMetaData, TokenStream
                 if count > 1 {
                     return Err(compile_error("Variant with more than 1 unnamed fields. Only variants with one unnamed field are allowed for routing."))
                 }
-                variants_and_types.push((variant_ident, unnamed_fields.unnamed.first().unwrap().ty.clone()));
+                variants.push(InputVariantMetaData{ ident: variant_ident, ty: unnamed_fields.unnamed.first().unwrap().ty.clone() });
             }
             Fields::Unit => return Err(compile_error("Unit variant. Only variants with one unnamed field are allowed for routing.")),
         }
     }
     Ok(InputEnumMetaData {
         enum_ident: item_enum.ident.clone(),
-        variants_and_types,
+        variants,
     })
 }
 
