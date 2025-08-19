@@ -1,6 +1,5 @@
 use crate::handler::EventHandler;
 use crate::processor::EventProcessor;
-use crate::util::process_event;
 use crate::SagaEvent;
 use bevy::ecs::schedule::ScheduleConfigs;
 use bevy::ecs::system::ScheduleSystem;
@@ -52,13 +51,10 @@ where
 
     fn register(self, app: &mut App) -> ScheduleConfigs<ScheduleSystem> {
         let (s1, s2, h) = self;
-        s1.register_processor(app);
-        s2.register_processor(app);
-        h.register_handler(app);
         (
-            process_event::<S1::In>,
-            process_event::<S2::In>,
-            process_event::<S3::In>,
+            s1.register_processor(app),
+            s2.register_processor(app),
+            h.register_handler(app),
         )
             .chain()
     }
@@ -79,15 +75,11 @@ where
 
     fn register(self, app: &mut App) -> ScheduleConfigs<ScheduleSystem> {
         let (s1, s2, s3, h) = self;
-        s1.register_processor(app);
-        s2.register_processor(app);
-        s3.register_processor(app);
-        h.register_handler(app);
         (
-            process_event::<S1::In>,
-            process_event::<S2::In>,
-            process_event::<S3::In>,
-            process_event::<S4::In>,
+            s1.register_processor(app),
+            s2.register_processor(app),
+            s3.register_processor(app),
+            h.register_handler(app),
         )
             .chain()
     }
