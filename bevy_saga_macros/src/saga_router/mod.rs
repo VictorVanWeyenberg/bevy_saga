@@ -4,6 +4,7 @@ use quote::quote;
 use syn::{Fields, ItemEnum, Type};
 
 mod event_handler;
+mod traits;
 mod util;
 
 struct InputEnumMetaData {
@@ -31,8 +32,10 @@ pub fn saga_router_from_enum(item_enum: ItemEnum) -> TokenStream {
 
 fn generate_routing_context(meta_data: InputEnumMetaData) -> TokenStream {
     let event_handler_context = generate_event_handler(&meta_data);
+    let traits = traits::generate_traits(&meta_data);
     quote! {
         #event_handler_context
+        #(#traits)*
     }
 }
 

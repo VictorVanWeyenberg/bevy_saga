@@ -14,35 +14,6 @@ struct Two;
 #[bevy_saga_macros::saga_event]
 struct Three;
 
-// Traits
-
-trait OneStage<Source, MarkerSource> {
-    fn one<OneSaga, MarkerOneSaga>(
-        self,
-        one_sage: OneSaga,
-    ) -> impl TwoStage<Source, MarkerSource, OneSaga>
-    where
-        OneSaga: bevy_saga::Saga<MarkerOneSaga, In = One>;
-}
-
-trait TwoStage<Source, MarkerSource, OneSaga> {
-    fn two<TwoSaga, MarkerTwoSaga>(
-        self,
-        two_saga: TwoSaga,
-    ) -> impl ThreeStage<Source, MarkerSource, OneSaga, TwoSaga>
-    where
-        TwoSaga: bevy_saga::Saga<MarkerTwoSaga, In = Two>;
-}
-
-trait ThreeStage<Source, MarkerSource, OneSaga, TwoSaga> {
-    fn three<ThreeSaga, MarkerThreeSaga>(
-        self,
-        three_saga: ThreeSaga,
-    ) -> RoutedEventRouter<Source, OneSaga, TwoSaga, ThreeSaga>
-    where
-        ThreeSaga: bevy_saga::Saga<MarkerThreeSaga, In = Three>;
-}
-
 // Builder
 
 struct OneStageBuilder<Source, OneSaga> {
@@ -64,7 +35,7 @@ struct TwoStageBuilder<Source, OneSaga, TwoSaga> {
 
 impl<Source, OneSaga, TwoSaga> TwoStageBuilder<Source, OneSaga, TwoSaga> {
     fn new(
-        OneStageBuilder { source, one, .. }: OneStageBuilder<Source, OneSaga>,
+        OneStageBuilder { source, one }: OneStageBuilder<Source, OneSaga>,
         two: TwoSaga,
     ) -> Self {
         TwoStageBuilder { source, one, two }

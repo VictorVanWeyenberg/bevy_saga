@@ -105,3 +105,15 @@ pub fn handler_field_name(variant: &InputVariantMetaData) -> Ident {
 pub fn handler_field_type(variant: &InputVariantMetaData) -> Ident {
     format_ident!("{}Saga", variant.ident)
 }
+
+pub fn trait_name(variant: &InputVariantMetaData) -> Ident {
+    format_ident!("{}Stage", variant.ident)
+}
+
+pub fn trait_method_name(variant: &InputVariantMetaData) -> Ident {
+    format_ident!("{}", variant.ident.clone().to_string().to_lowercase())
+}
+
+pub fn trait_parameter_name(variant: &InputVariantMetaData) -> Ident {
+    format_ident!("{}_saga", variant.ident.clone().to_string().to_lowercase())
+}
