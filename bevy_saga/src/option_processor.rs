@@ -3,6 +3,7 @@ use crate::{SagaEvent, plugin::BevySagaUtil};
 use bevy::ecs::schedule::ScheduleConfigs;
 use bevy::ecs::system::ScheduleSystem;
 use bevy::prelude::{App, Event, IntoScheduleConfigs, SystemParamFunction};
+use variadics_please::all_tuples;
 
 pub struct OptionProcessor<T>(T);
 
@@ -21,79 +22,30 @@ where
     }
 }
 
-impl<SPF1, SPF2, M1, M2, In, Out> EventProcessor<OptionProcessor<(M1, M2)>> for (SPF1, SPF2)
-where
-    In: SagaEvent,
-    Out: Event,
-    SPF1: SystemParamFunction<M1, In = In, Out = Option<Out>>,
-    SPF2: SystemParamFunction<M2, In = In, Out = ()>,
-    M1: 'static,
-    M2: 'static,
-{
-    type In = In;
-    type Out = Out;
+macro_rules! impl_option_processor {
+    ($(#[$meta:meta])* $(($SPF:ident, $p:ident, $M:ident)),*) => {
+        impl<PROC, MPROC, $($SPF,)* $($M,)* In, Out> EventProcessor<OptionProcessor<(MPROC, $($M,)*)>> for (PROC, $($SPF,)*)
+        where
+            In: SagaEvent,
+            Out: Event,
+            PROC: SystemParamFunction<MPROC, In = In, Out = Option<Out>>,
+            $($SPF: SystemParamFunction<$M, In = In, Out = ()>,)*
+            MPROC: 'static,
+            $($M: 'static,)*
+        {
+            type In = In;
+            type Out = Out;
 
-    fn register_processor(self, app: &mut App) -> ScheduleConfigs<ScheduleSystem> {
-        let (spf1, spf2) = self;
-        (
-            app.add_option_processor::<In, Out, _>(spf1),
-            app.add_event_handler::<In, _>(spf2),
-        )
-            .into_configs()
+            fn register_processor(self, app: &mut App) -> ScheduleConfigs<ScheduleSystem> {
+                let (proc, $($p,)*) = self;
+                (
+                    app.add_option_processor::<In, Out, _>(proc),
+                    $(app.add_event_handler::<In, _>($p),)*
+                )
+                    .into_configs()
+            }
+        }
     }
 }
 
-impl<SPF1, SPF2, SPF3, M1, M2, M3, In, Out> EventProcessor<OptionProcessor<(M1, M2, M3)>>
-    for (SPF1, SPF2, SPF3)
-where
-    In: SagaEvent,
-    Out: Event,
-    SPF1: SystemParamFunction<M1, In = In, Out = Option<Out>>,
-    SPF2: SystemParamFunction<M2, In = In, Out = ()>,
-    SPF3: SystemParamFunction<M3, In = In, Out = ()>,
-    M1: 'static,
-    M2: 'static,
-    M3: 'static,
-{
-    type In = In;
-    type Out = Out;
-
-    fn register_processor(self, app: &mut App) -> ScheduleConfigs<ScheduleSystem> {
-        let (spf1, spf2, spf3) = self;
-        (
-            app.add_option_processor::<In, Out, _>(spf1),
-            app.add_event_handler::<In, _>(spf2),
-            app.add_event_handler::<In, _>(spf3),
-        )
-            .into_configs()
-    }
-}
-
-impl<SPF1, SPF2, SPF3, SPF4, M1, M2, M3, M4, In, Out>
-    EventProcessor<OptionProcessor<(M1, M2, M3, M4)>> for (SPF1, SPF2, SPF3, SPF4)
-where
-    In: SagaEvent,
-    Out: Event,
-    SPF1: SystemParamFunction<M1, In = In, Out = Option<Out>>,
-    SPF2: SystemParamFunction<M2, In = In, Out = ()>,
-    SPF3: SystemParamFunction<M3, In = In, Out = ()>,
-    SPF4: SystemParamFunction<M4, In = In, Out = ()>,
-    M1: 'static,
-    M2: 'static,
-    M3: 'static,
-    M4: 'static,
-{
-    type In = In;
-    type Out = Out;
-
-    fn register_processor(self, app: &mut App) -> ScheduleConfigs<ScheduleSystem> {
-        let (spf1, spf2, spf3, spf4) = self;
-        (
-            app.add_option_processor::<In, Out, _>(spf1),
-            app.add_event_handler::<In, _>(spf2),
-            app.add_event_handler::<In, _>(spf3),
-            app.add_event_handler::<In, _>(spf4),
-        )
-            .into_configs()
-    }
-}
+all_tuples!(impl_option_processor, 1, 15, SPF, p, M);
