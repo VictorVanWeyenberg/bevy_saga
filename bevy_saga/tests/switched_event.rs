@@ -18,53 +18,39 @@ struct Three;
 
 struct OneStageBuilder<Source, OneSaga> {
     source: Source,
-    one: OneSaga,
-}
-
-impl<Source, OneSaga> OneStageBuilder<Source, OneSaga> {
-    fn new(source: Source, one: OneSaga) -> Self {
-        OneStageBuilder { source, one }
-    }
+    one_saga: OneSaga,
 }
 
 struct TwoStageBuilder<Source, OneSaga, TwoSaga> {
     source: Source,
-    one: OneSaga,
-    two: TwoSaga,
-}
-
-impl<Source, OneSaga, TwoSaga> TwoStageBuilder<Source, OneSaga, TwoSaga> {
-    fn new(
-        OneStageBuilder { source, one }: OneStageBuilder<Source, OneSaga>,
-        two: TwoSaga,
-    ) -> Self {
-        TwoStageBuilder { source, one, two }
-    }
+    one_saga: OneSaga,
+    two_saga: TwoSaga,
 }
 
 // Builder implementations
 
 impl<Source, MarkerSource> OneStage<Source, MarkerSource> for Source
 where
-    Source: bevy::prelude::SystemParamFunction<MarkerSource, Out =RoutedEvent>,
+    Source: bevy::prelude::SystemParamFunction<MarkerSource, Out = RoutedEvent>,
     Source::In: bevy_saga::SagaEvent,
     MarkerSource: 'static,
 {
     fn one<OneSaga, MarkerOneSaga>(
         self,
-        one_sage: OneSaga,
+        one_saga: OneSaga,
     ) -> impl TwoStage<Source, MarkerSource, OneSaga>
     where
         OneSaga: bevy_saga::Saga<MarkerOneSaga, In = One>,
     {
-        OneStageBuilder::new(self, one_sage)
+        let source = self;
+        OneStageBuilder { source, one_saga }
     }
 }
 
 impl<Source, OneSaga, MarkerSource> TwoStage<Source, MarkerSource, OneSaga>
     for OneStageBuilder<Source, OneSaga>
 where
-    Source: bevy::prelude::SystemParamFunction<MarkerSource, Out =RoutedEvent>,
+    Source: bevy::prelude::SystemParamFunction<MarkerSource, Out = RoutedEvent>,
     Source::In: bevy_saga::SagaEvent,
     MarkerSource: 'static,
 {
@@ -75,14 +61,19 @@ where
     where
         TwoSaga: bevy_saga::Saga<MarkerTwoSaga, In = Two>,
     {
-        TwoStageBuilder::new(self, two_saga)
+        let OneStageBuilder { source, one_saga } = self;
+        TwoStageBuilder {
+            source,
+            one_saga,
+            two_saga,
+        }
     }
 }
 
 impl<Source, OneSaga, TwoSaga, MarkerSource> ThreeStage<Source, MarkerSource, OneSaga, TwoSaga>
     for TwoStageBuilder<Source, OneSaga, TwoSaga>
 where
-    Source: bevy::prelude::SystemParamFunction<MarkerSource, Out =RoutedEvent>,
+    Source: bevy::prelude::SystemParamFunction<MarkerSource, Out = RoutedEvent>,
     Source::In: bevy_saga::SagaEvent,
 {
     fn three<ThreeSaga, MarkerThreeSaga>(
@@ -92,8 +83,12 @@ where
     where
         ThreeSaga: bevy_saga::Saga<MarkerThreeSaga, In = Three>,
     {
-        let TwoStageBuilder { source, one, two } = self;
-        RoutedEventRouter::new(source, one, two, three_saga)
+        let TwoStageBuilder {
+            source,
+            one_saga,
+            two_saga,
+        } = self;
+        RoutedEventRouter::new(source, one_saga, two_saga, three_saga)
     }
 }
 
@@ -150,15 +145,15 @@ fn send_routed_event_response(
 #[cfg(test)]
 mod tests {
     use crate::ThreeStage;
-use crate::TwoStage;
-use bevy::prelude::{App, Update};
+    use crate::TwoStage;
+    use crate::{One, OneStage, RoutedEvent, Three, Two};
+    use bevy::prelude::{App, Update};
     use bevy_saga::RegisterSaga;
     use bevy_saga_macros::saga_event;
-    use crate::{One, OneStage, RoutedEvent, Three, Two};
 
     #[saga_event]
     struct Input;
-    
+
     fn pre_route(input: Input) -> RoutedEvent {
         RoutedEvent::One(One)
     }
