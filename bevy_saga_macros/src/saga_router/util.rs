@@ -102,6 +102,13 @@ pub fn handler_field_name(variant: &InputVariantMetaData) -> Ident {
     format_ident!("{}", variant.ident.clone().to_string().to_lowercase())
 }
 
+pub fn to_field_types(variants: &Vec<&InputVariantMetaData>) -> Vec<Ident> {
+    variants.into_iter()
+        .map(|x| *x)
+        .map(handler_field_type)
+        .collect()
+}
+
 pub fn handler_field_type(variant: &InputVariantMetaData) -> Ident {
     format_ident!("{}Saga", variant.ident)
 }
@@ -112,6 +119,13 @@ pub fn trait_name(variant: &InputVariantMetaData) -> Ident {
 
 pub fn trait_method_name(variant: &InputVariantMetaData) -> Ident {
     format_ident!("{}", variant.ident.clone().to_string().to_lowercase())
+}
+
+pub fn to_parameter_names(variants: &Vec<&InputVariantMetaData>) -> Vec<Ident> {
+    variants.into_iter()
+        .map(|x| *x)
+        .map(trait_parameter_name)
+        .collect()
 }
 
 pub fn trait_parameter_name(variant: &InputVariantMetaData) -> Ident {

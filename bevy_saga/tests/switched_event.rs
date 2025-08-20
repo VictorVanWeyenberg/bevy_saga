@@ -14,19 +14,6 @@ struct Two;
 #[bevy_saga_macros::saga_event]
 struct Three;
 
-// Builder
-
-struct OneStageBuilder<Source, OneSaga> {
-    source: Source,
-    one_saga: OneSaga,
-}
-
-struct TwoStageBuilder<Source, OneSaga, TwoSaga> {
-    source: Source,
-    one_saga: OneSaga,
-    two_saga: TwoSaga,
-}
-
 // Builder implementations
 
 impl<Source, MarkerSource> OneStage<Source, MarkerSource> for Source
