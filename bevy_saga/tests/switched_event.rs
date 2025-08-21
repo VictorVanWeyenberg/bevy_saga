@@ -1,40 +1,62 @@
-#[bevy_saga_macros::saga_router]
-enum RoutedEvent {
-    One(One),
-    Two(Two),
-    Three(Three),
+use bevy::prelude::{App, ResMut, Resource, Update};
+use bevy_saga::RegisterSaga;
+use bevy_saga_macros::{saga_event, saga_router};
+
+#[derive(Default, Resource)]
+struct Identifier(Option<String>);
+
+#[saga_router]
+enum Foobar {
+    Apple(Foo),
+    Banana(Bar),
+    Cherry(Baz),
 }
 
-#[bevy_saga_macros::saga_event]
-struct One;
+#[saga_event]
+struct Foo;
+#[saga_event]
+struct Bar;
+#[saga_event]
+struct Baz;
 
-#[bevy_saga_macros::saga_event]
-struct Two;
+#[saga_event]
+struct Input(Foobar);
 
-#[bevy_saga_macros::saga_event]
-struct Three;
+fn pre_route(Input(input): Input) -> Foobar {
+    input
+}
 
-#[cfg(test)]
-mod tests {
-    use crate::ThreeStage;
-    use crate::TwoStage;
-    use crate::{One, OneStage, RoutedEvent, Three, Two};
-    use bevy::prelude::{App, Update};
-    use bevy_saga::RegisterSaga;
-    use bevy_saga_macros::saga_event;
+fn foo(_: Foo, mut identifier: ResMut<Identifier>) {
+    identifier.0 = Some("apple".to_string())
+}
 
-    #[saga_event]
-    struct Input;
+fn bar(_: Bar, mut identifier: ResMut<Identifier>) {
+    identifier.0 = Some("banana".to_string())
+}
 
-    fn pre_route(input: Input) -> RoutedEvent {
-        RoutedEvent::One(One)
+fn baz(_: Baz, mut identifier: ResMut<Identifier>) {
+    identifier.0 = Some("cherry".to_string())
+}
+
+fn test(input: Input, expected: &str) {
+    let mut app = App::new();
+    app.init_resource::<Identifier>();
+    app.add_saga(
+        Update,
+        pre_route.apple(foo).banana(bar).cherry(baz),
+    );
+    app.world_mut().send_event(input);
+    app.update();
+    if let Some(identifier) = &app.world().resource::<Identifier>().0 {
+        assert_eq!(identifier, expected)
+    } else {
+        panic!("Identifier was still None.")
     }
-    fn one(one: One) {}
-    fn two(two: Two) {}
-    fn three(three: Three) {}
-    #[test]
-    fn does_it_work() {
-        let mut app = App::new();
-        app.add_saga(Update, pre_route.one(one).two(two).three(three));
-    }
+}
+
+#[test]
+fn switched_event() {
+    test(Input(Foobar::Apple(Foo)), "apple");
+    test(Input(Foobar::Banana(Bar)), "banana");
+    test(Input(Foobar::Cherry(Baz)), "cherry");
 }

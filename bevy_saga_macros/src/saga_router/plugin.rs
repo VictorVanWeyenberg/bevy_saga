@@ -1,7 +1,7 @@
 use proc_macro2::TokenStream;
 use quote::quote;
 use crate::saga_router::InputEnumMetaData;
-use crate::saga_router::util::{pipe_system_name, plugin_add_handler_method_name, plugin_trait_name, to_variant_idents, to_writer_parameters};
+use crate::saga_router::util::{pipe_system_name, plugin_add_handler_method_name, plugin_trait_name, to_variant_idents, to_variant_types, to_writer_parameters};
 
 pub fn generate_plugin(input_enum: &InputEnumMetaData) -> TokenStream {
     let plugin_trait = generate_plugin_trait(input_enum);
@@ -61,10 +61,11 @@ fn generate_pipe_system(input_enum: &InputEnumMetaData) -> TokenStream {
     let enum_ident = &input_enum.enum_ident;
     let variant_idents = to_variant_idents(input_enum);
     let writer_parameters = to_writer_parameters(input_enum);
+    let variant_types = to_variant_types(input_enum);
     quote! {
         fn #pipe_system_name(
             bevy::prelude::In(input_event): bevy::prelude::In<#enum_ident>,
-            #(mut #writer_parameters: bevy::prelude::EventWriter<#variant_idents>,)*
+            #(mut #writer_parameters: bevy::prelude::EventWriter<#variant_types>,)*
         ) {
             match input_event {
                 #(#enum_ident::#variant_idents(value) => {

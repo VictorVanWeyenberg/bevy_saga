@@ -2,6 +2,7 @@ use crate::saga_router::{InputEnumMetaData, InputVariantMetaData};
 use proc_macro2::{Ident, TokenStream};
 use quote::{format_ident, quote};
 use stringcase::snake_case;
+use syn::Type;
 
 pub fn generic_types(input_enum: &InputEnumMetaData) -> Vec<Ident> {
     input_enum.variants.iter().map(to_generic_type).collect()
@@ -72,6 +73,14 @@ pub fn to_variant_idents(input_enum: &InputEnumMetaData) -> Vec<Ident> {
         .variants
         .iter()
         .map(|variant| variant.ident.clone())
+        .collect()
+}
+
+pub fn to_variant_types(input_enum: &InputEnumMetaData) -> Vec<&Type> {
+    input_enum
+        .variants
+        .iter()
+        .map(|variant| &variant.ty)
         .collect()
 }
 
