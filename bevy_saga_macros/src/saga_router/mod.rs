@@ -3,6 +3,7 @@ use proc_macro2::{Ident, TokenStream};
 use quote::quote;
 use syn::{Fields, ItemEnum, Type};
 
+mod builder_impl;
 mod builders;
 mod event_handler;
 mod plugin;
@@ -14,6 +15,7 @@ struct InputEnumMetaData {
     variants: Vec<InputVariantMetaData>,
 }
 
+#[derive(Clone)]
 struct InputVariantMetaData {
     ident: Ident,
     ty: Type,
@@ -36,11 +38,13 @@ fn generate_routing_context(meta_data: InputEnumMetaData) -> TokenStream {
     let event_handler_context = generate_event_handler(&meta_data);
     let traits = traits::generate_traits(&meta_data);
     let builders = builders::generate_builders(&meta_data);
+    let builder_impls = builder_impl::generate_builder_impls(&meta_data);
     let plugin = plugin::generate_plugin(&meta_data);
     quote! {
         #event_handler_context
         #(#traits)*
         #(#builders)*
+        #(#builder_impls)*
         #plugin
     }
 }

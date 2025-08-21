@@ -19,7 +19,7 @@ pub fn marker_generics(input_enum: &InputEnumMetaData) -> Vec<Ident> {
     input_enum
         .variants
         .iter()
-        .map(to_marker_generic_types)
+        .map(to_marker_generic_type)
         .collect()
 }
 
@@ -87,13 +87,13 @@ pub fn to_field_name(variant: &InputVariantMetaData) -> Ident {
     handler_field_name(variant)
 }
 
-pub fn to_marker_generic_types(variant: &InputVariantMetaData) -> Ident {
+pub fn to_marker_generic_type(variant: &InputVariantMetaData) -> Ident {
     format_ident!("Marker{}", handler_field_type(variant))
 }
 
 pub fn to_generic_constraint(variant: &InputVariantMetaData) -> TokenStream {
     let generic_name = handler_field_type(variant);
-    let marker_generic_type = to_marker_generic_types(variant);
+    let marker_generic_type = to_marker_generic_type(variant);
     let ty = &variant.ty;
     quote! {
         #generic_name: bevy_saga::Saga<#marker_generic_type, In = #ty>
@@ -115,12 +115,8 @@ pub fn pipe_system_name(input_enum: &InputEnumMetaData) -> Ident {
     format_ident!("send_{}_response", enum_ident_snake_case(input_enum))
 }
 
-pub fn to_field_types(variants: &Vec<&InputVariantMetaData>) -> Vec<Ident> {
-    variants
-        .into_iter()
-        .map(|x| *x)
-        .map(handler_field_type)
-        .collect()
+pub fn to_field_types(variants: &[InputVariantMetaData]) -> Vec<Ident> {
+    variants.iter().map(handler_field_type).collect()
 }
 
 pub fn handler_field_type(variant: &InputVariantMetaData) -> Ident {
@@ -131,16 +127,16 @@ pub fn trait_name(variant: &InputVariantMetaData) -> Ident {
     format_ident!("{}Stage", variant.ident)
 }
 
+pub fn builder_struct_name(variant: &InputVariantMetaData) -> Ident {
+    format_ident!("{}Builder", trait_name(variant))
+}
+
 pub fn trait_method_name(variant: &InputVariantMetaData) -> Ident {
     format_ident!("{}", variant.ident.clone().to_string().to_lowercase())
 }
 
-pub fn to_parameter_names(variants: &Vec<&InputVariantMetaData>) -> Vec<Ident> {
-    variants
-        .into_iter()
-        .map(|x| *x)
-        .map(trait_parameter_name)
-        .collect()
+pub fn to_parameter_names(variants: &[InputVariantMetaData]) -> Vec<Ident> {
+    variants.into_iter().map(trait_parameter_name).collect()
 }
 
 pub fn trait_parameter_name(variant: &InputVariantMetaData) -> Ident {

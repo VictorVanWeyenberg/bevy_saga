@@ -22,7 +22,7 @@ fn trait_from_variants(
     let trait_name = trait_name(current);
     let trait_method_name = trait_method_name(current);
     let trait_parameter_type = handler_field_type(current);
-    let trait_parameter_marker = to_marker_generic_types(current);
+    let trait_parameter_marker = to_marker_generic_type(current);
     let trait_parameter_name = trait_parameter_name(current);
     let constraint = to_generic_constraint(current);
     let return_trait = util::trait_name(next);
@@ -44,7 +44,7 @@ fn last_trait_from_variant(router_type: Ident, variant: &InputVariantMetaData, g
     let trait_name = trait_name(variant);
     let trait_method_name = trait_method_name(variant);
     let trait_parameter_type = handler_field_type(variant);
-    let trait_parameter_marker = to_marker_generic_types(variant);
+    let trait_parameter_marker = to_marker_generic_type(variant);
     let trait_parameter_name = trait_parameter_name(variant);
     let constraint = to_generic_constraint(variant);
     quote! {
