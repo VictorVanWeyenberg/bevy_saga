@@ -79,54 +79,6 @@ where
     }
 }
 
-// App Plugin
-
-trait RoutedEventPlugin {
-    fn add_routed_event_handler<R, M>(
-        &mut self,
-        handler: impl bevy::prelude::IntoSystem<R, RoutedEvent, M> + 'static,
-    ) -> bevy::ecs::schedule::ScheduleConfigs<bevy::ecs::system::ScheduleSystem>
-    where
-        R: bevy_saga::SagaEvent;
-}
-
-impl RoutedEventPlugin for bevy::prelude::App {
-    fn add_routed_event_handler<R, M>(
-        &mut self,
-        handler: impl bevy::prelude::IntoSystem<R, RoutedEvent, M> + 'static,
-    ) -> bevy::ecs::schedule::ScheduleConfigs<bevy::ecs::system::ScheduleSystem>
-    where
-        R: bevy_saga::SagaEvent,
-    {
-        self.add_event::<R>();
-        self.init_resource::<bevy_saga::EventProcessors<R>>();
-        let id = self.register_system(handler.pipe(send_routed_event_response));
-        self.world_mut()
-            .resource_mut::<bevy_saga::EventProcessors<R>>()
-            .push(id);
-        bevy::prelude::IntoScheduleConfigs::into_configs(bevy_saga::process_event::<R>)
-    }
-}
-
-fn send_routed_event_response(
-    bevy::prelude::In(routed_event): bevy::prelude::In<RoutedEvent>,
-    mut one_writer: bevy::prelude::EventWriter<One>,
-    mut two_writer: bevy::prelude::EventWriter<Two>,
-    mut three_writer: bevy::prelude::EventWriter<Three>,
-) {
-    match routed_event {
-        RoutedEvent::One(one) => {
-            one_writer.write(one);
-        }
-        RoutedEvent::Two(two) => {
-            two_writer.write(two);
-        }
-        RoutedEvent::Three(three) => {
-            three_writer.write(three);
-        }
-    }
-}
-
 // test
 
 #[cfg(test)]

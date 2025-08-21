@@ -1,30 +1,18 @@
+use crate::saga_router::{InputEnumMetaData, InputVariantMetaData};
 use proc_macro2::{Ident, TokenStream};
 use quote::{format_ident, quote};
 use stringcase::snake_case;
-use crate::saga_router::{InputEnumMetaData, InputVariantMetaData};
 
 pub fn generic_types(input_enum: &InputEnumMetaData) -> Vec<Ident> {
-    input_enum
-        .variants
-        .iter()
-        .map(to_generic_type)
-        .collect()
+    input_enum.variants.iter().map(to_generic_type).collect()
 }
 
 pub fn field_notations(input_enum: &InputEnumMetaData) -> Vec<TokenStream> {
-    input_enum
-        .variants
-        .iter()
-        .map(to_field_notation)
-        .collect()
+    input_enum.variants.iter().map(to_field_notation).collect()
 }
 
 pub fn field_names(input_enum: &InputEnumMetaData) -> Vec<Ident> {
-    input_enum
-        .variants
-        .iter()
-        .map(to_field_name)
-        .collect()
+    input_enum.variants.iter().map(to_field_name).collect()
 }
 
 pub fn marker_generics(input_enum: &InputEnumMetaData) -> Vec<Ident> {
@@ -52,10 +40,15 @@ pub fn saga_register_calls(input_enum: &InputEnumMetaData) -> Vec<TokenStream> {
 }
 
 pub fn plugin_add_handler_method_name(input_enum: &InputEnumMetaData) -> Ident {
-    format_ident!(
-        "add_{}_handler",
-        snake_case(input_enum.enum_ident.to_string().as_str())
-    )
+    format_ident!("add_{}_handler", enum_ident_snake_case(input_enum))
+}
+
+fn enum_ident_snake_case(input_enum: &InputEnumMetaData) -> String {
+    snake_case(input_enum.enum_ident.to_string().as_str())
+}
+
+pub fn plugin_trait_name(input_enum: &InputEnumMetaData) -> Ident {
+    format_ident!("{}Plugin", input_enum.enum_ident)
 }
 
 pub fn router_struct_name(input_enum: &InputEnumMetaData) -> Ident {
@@ -72,6 +65,22 @@ pub fn to_field_notation(variant: &InputVariantMetaData) -> TokenStream {
     quote! {
         #ident: #field_type
     }
+}
+
+pub fn to_variant_idents(input_enum: &InputEnumMetaData) -> Vec<Ident> {
+    input_enum
+        .variants
+        .iter()
+        .map(|variant| variant.ident.clone())
+        .collect()
+}
+
+pub fn to_writer_parameters(input_enum: &InputEnumMetaData) -> Vec<Ident> {
+    input_enum
+        .variants
+        .iter()
+        .map(|variant| format_ident!("{}_writer", variant.ident.to_string().to_lowercase()))
+        .collect()
 }
 
 pub fn to_field_name(variant: &InputVariantMetaData) -> Ident {
@@ -102,8 +111,13 @@ pub fn handler_field_name(variant: &InputVariantMetaData) -> Ident {
     format_ident!("{}", variant.ident.clone().to_string().to_lowercase())
 }
 
+pub fn pipe_system_name(input_enum: &InputEnumMetaData) -> Ident {
+    format_ident!("send_{}_response", enum_ident_snake_case(input_enum))
+}
+
 pub fn to_field_types(variants: &Vec<&InputVariantMetaData>) -> Vec<Ident> {
-    variants.into_iter()
+    variants
+        .into_iter()
         .map(|x| *x)
         .map(handler_field_type)
         .collect()
@@ -122,7 +136,8 @@ pub fn trait_method_name(variant: &InputVariantMetaData) -> Ident {
 }
 
 pub fn to_parameter_names(variants: &Vec<&InputVariantMetaData>) -> Vec<Ident> {
-    variants.into_iter()
+    variants
+        .into_iter()
         .map(|x| *x)
         .map(trait_parameter_name)
         .collect()

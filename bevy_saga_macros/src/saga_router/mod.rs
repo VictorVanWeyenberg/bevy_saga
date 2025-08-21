@@ -5,6 +5,7 @@ use syn::{Fields, ItemEnum, Type};
 
 mod builders;
 mod event_handler;
+mod plugin;
 mod traits;
 mod util;
 
@@ -35,10 +36,12 @@ fn generate_routing_context(meta_data: InputEnumMetaData) -> TokenStream {
     let event_handler_context = generate_event_handler(&meta_data);
     let traits = traits::generate_traits(&meta_data);
     let builders = builders::generate_builders(&meta_data);
+    let plugin = plugin::generate_plugin(&meta_data);
     quote! {
         #event_handler_context
         #(#traits)*
         #(#builders)*
+        #plugin
     }
 }
 
