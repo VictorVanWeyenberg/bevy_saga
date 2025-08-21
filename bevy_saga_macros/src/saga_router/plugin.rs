@@ -19,7 +19,7 @@ fn generate_plugin_trait(input_enum: &InputEnumMetaData) -> TokenStream {
     let method_name = plugin_add_handler_method_name(input_enum);
     let enum_ident = &input_enum.enum_ident;
     quote! {
-        trait #plugin_trait_name {
+        pub trait #plugin_trait_name {
             fn #method_name<R, M>(
                 &mut self,
                 handler: impl bevy::prelude::IntoSystem<R, #enum_ident, M> + 'static,

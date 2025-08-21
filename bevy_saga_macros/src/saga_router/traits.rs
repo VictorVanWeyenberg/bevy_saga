@@ -27,7 +27,7 @@ fn trait_from_variants(
     let constraint = to_generic_constraint(current);
     let return_trait = util::trait_name(next);
     let tokens = quote! {
-        trait #trait_name<Source, MarkerSource, #(#generics_stack, )*> {
+        pub trait #trait_name<Source, MarkerSource, #(#generics_stack, )*> {
             fn #trait_method_name<#trait_parameter_type, #trait_parameter_marker>(
                 self,
                 #trait_parameter_name: #trait_parameter_type,
