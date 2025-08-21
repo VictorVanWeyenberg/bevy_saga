@@ -102,7 +102,6 @@ impl BevySagaUtil for App {
     {
         self.add_event::<R>();
         self.init_resource::<EventProcessors<R>>();
-        self.init_resource::<EventProcessors<R>>();
         let id = self.register_system(handler.pipe(send_result_response::<Ok, Err>));
         self.world_mut().resource_mut::<EventProcessors<R>>().push(id);
         process_event::<R>.into_configs()
