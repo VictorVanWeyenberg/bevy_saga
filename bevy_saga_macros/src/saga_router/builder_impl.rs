@@ -33,10 +33,10 @@ fn generate_builder_impl(
     current: &InputVariantMetaData,
     next: Option<&InputVariantMetaData>,
 ) -> TokenStream {
-    let enum_ident = &input_enum.enum_ident;
     let previous_field_types = to_field_types(previous);
     let trait_name = trait_name(current);
     let implementor = derive_implementor(last, &previous_field_types);
+    let processor_trait = processor_trait_name(input_enum);
     let method_definition = generate_method_definition(current);
     let constraint = to_generic_constraint(current);
     let return_type = derive_return_type(input_enum, previous, current, next);
@@ -46,7 +46,7 @@ fn generate_builder_impl(
         impl<Source, MarkerSource, #(#previous_field_types,)*> #trait_name<Source, MarkerSource, #(#previous_field_types,)*>
             for #implementor
         where
-            Source: bevy::prelude::SystemParamFunction<MarkerSource, Out = #enum_ident>,
+            Source: #processor_trait<MarkerSource>,
             Source::In: bevy_saga::SagaEvent,
             MarkerSource: 'static,
         {

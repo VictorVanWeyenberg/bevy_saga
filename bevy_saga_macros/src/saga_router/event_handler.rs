@@ -36,12 +36,12 @@ fn router_impl(input_enum: &InputEnumMetaData) -> TokenStream {
 fn event_handler_impl(input_enum: &InputEnumMetaData) -> TokenStream {
     let struct_ident = router_struct_name(input_enum);
     let generics = generic_types(input_enum);
+    let processor_trait = processor_trait_name(input_enum);
+    let processor_trait_method = processor_trait_method_name(input_enum);
     let marker_generics = marker_generics(input_enum);
     let field_names = field_names(input_enum);
-    let enum_ident = &input_enum.enum_ident;
     let constraints = generics_constraints(input_enum);
     let saga_register_calls = saga_register_calls(input_enum);
-    let method_name = plugin_add_handler_method_name(input_enum);
     quote! {
         impl<
             Source,
@@ -51,7 +51,7 @@ fn event_handler_impl(input_enum: &InputEnumMetaData) -> TokenStream {
         > bevy_saga::EventHandler<(MarkerSource, #(#marker_generics, )*)>
         for #struct_ident<Source, #(#generics, )*>
         where
-            Source: bevy::prelude::SystemParamFunction<MarkerSource, Out = #enum_ident>,
+            Source: #processor_trait<MarkerSource>,
             Source::In: bevy_saga::SagaEvent,
             #(#constraints, )*
             MarkerSource: 'static,
@@ -67,7 +67,7 @@ fn event_handler_impl(input_enum: &InputEnumMetaData) -> TokenStream {
                     #(#field_names, )*
                 } = self;
                 bevy::prelude::IntoScheduleConfigs::chain((
-                    app.#method_name(source),
+                    source.#processor_trait_method(app),
                     (#(#saga_register_calls, )*),
                 ))
             }

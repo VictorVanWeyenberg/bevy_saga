@@ -151,3 +151,11 @@ pub fn to_parameter_names(variants: &[InputVariantMetaData]) -> Vec<Ident> {
 pub fn trait_parameter_name(variant: &InputVariantMetaData) -> Ident {
     format_ident!("{}_saga", variant.ident.clone().to_string().to_lowercase())
 }
+
+pub fn processor_trait_name(input_enum: &InputEnumMetaData) -> Ident {
+    format_ident!("{}Processor", &input_enum.enum_ident)
+}
+
+pub fn processor_trait_method_name(input_enum: &InputEnumMetaData) -> Ident {
+    format_ident!("register_{}_processor", snake_case(&input_enum.enum_ident.to_string()))
+}

@@ -2,11 +2,13 @@ use crate::saga_router::event_handler::generate_event_handler;
 use proc_macro2::{Ident, TokenStream};
 use quote::quote;
 use syn::{Fields, ItemEnum, Type};
+use crate::saga_router::processor_trait::generate_processor_trait;
 
 mod builder_impl;
 mod builders;
 mod event_handler;
 mod plugin;
+mod processor_trait;
 mod traits;
 mod util;
 
@@ -35,12 +37,14 @@ pub fn saga_router_from_enum(item_enum: ItemEnum) -> TokenStream {
 }
 
 fn generate_routing_context(meta_data: InputEnumMetaData) -> TokenStream {
+    let processor_trait = generate_processor_trait(&meta_data);
     let event_handler_context = generate_event_handler(&meta_data);
     let traits = traits::generate_traits(&meta_data);
     let builders = builders::generate_builders(&meta_data);
     let builder_impls = builder_impl::generate_builder_impls(&meta_data);
     let plugin = plugin::generate_plugin(&meta_data);
     quote! {
+        #processor_trait
         #event_handler_context
         #(#traits)*
         #(#builders)*
