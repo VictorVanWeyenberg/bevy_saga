@@ -4,7 +4,7 @@ use crate::{Saga, SagaEvent};
 use bevy::app::App;
 use bevy::ecs::schedule::ScheduleConfigs;
 use bevy::ecs::system::ScheduleSystem;
-use bevy::prelude::{IntoScheduleConfigs, SystemParamFunction};
+use bevy::prelude::IntoScheduleConfigs;
 
 pub struct ResultHandler<ResultSource, OkSaga, ErrSaga> {
     result_source: ResultSource,
