@@ -5,6 +5,7 @@ mod option_processor;
 mod plugin;
 mod processor;
 mod result_handler;
+mod result_processor;
 mod saga;
 mod util;
 

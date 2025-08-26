@@ -28,6 +28,10 @@ fn result_processor(Input(input): Input) -> Result<OkPath, ErrPath> {
     }
 }
 
+fn result_handler(Input(_): Input) {
+    // Check if it registers.
+}
+
 fn ok_path(OkPath(value): OkPath, mut counter: ResMut<Counter>) {
     counter.0 = value
 }
@@ -49,7 +53,7 @@ fn test<M>(saga: impl Saga<M>, input: OkOrErr) -> u8 {
 fn test_ok() {
     assert_eq!(
         1,
-        test(result_processor.ok(ok_path).err(err_path), OkOrErr::Ok)
+        test((result_processor, result_handler).ok(ok_path).err(err_path), OkOrErr::Ok)
     );
 }
 

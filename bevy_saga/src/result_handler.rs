@@ -1,5 +1,5 @@
 use crate::handler::EventHandler;
-use crate::plugin::BevySagaUtil;
+use crate::result_processor::ResultProcessor;
 use crate::{Saga, SagaEvent};
 use bevy::app::App;
 use bevy::ecs::schedule::ScheduleConfigs;
@@ -17,7 +17,7 @@ pub struct ResultHandlerM<T>(T);
 impl<ResultSource, OkSaga, ErrSaga, MRS, MOP, MEP> EventHandler<ResultHandlerM<(MRS, MOP, MEP)>>
     for ResultHandler<ResultSource, OkSaga, ErrSaga>
 where
-    ResultSource: SystemParamFunction<MRS, Out = Result<OkSaga::In, ErrSaga::In>>,
+    ResultSource: ResultProcessor<MRS, Ok = OkSaga::In, Err = ErrSaga::In>,
     ResultSource::In: SagaEvent,
     OkSaga: Saga<MOP>,
     ErrSaga: Saga<MEP>,
@@ -37,7 +37,7 @@ where
         } = self;
 
         (
-            app.add_result_handler(result_source),
+            result_source.register_result_processor(app),
             (ok_saga.register(app), err_saga.register(app)).into_configs(),
         )
             .chain()
@@ -46,7 +46,7 @@ where
 
 pub trait OkStage<RS, MRS, Ok, Err>
 where
-    RS: SystemParamFunction<MRS, Out = Result<Ok, Err>>,
+    RS: ResultProcessor<MRS, Ok = Ok, Err = Err>,
     RS::In: SagaEvent,
 {
     fn ok<OkSaga, MOP>(self, ok_saga: OkSaga) -> impl ErrStage<RS, MRS, MOP, Ok, Err>
@@ -72,7 +72,7 @@ struct OkBuilderStage<ResultSource, OkSaga> {
 
 impl<RS, MRS, Ok, Err> OkStage<RS, MRS, Ok, Err> for RS
 where
-    RS: SystemParamFunction<MRS, Out = Result<Ok, Err>>,
+    RS: ResultProcessor<MRS, Ok = Ok, Err = Err>,
     RS::In: SagaEvent,
     Ok: SagaEvent,
     Err: SagaEvent,
@@ -92,7 +92,7 @@ where
 
 impl<RS, MRS, MOP, OkSaga, Ok, Err> ErrStage<RS, MRS, MOP, Ok, Err> for OkBuilderStage<RS, OkSaga>
 where
-    RS: SystemParamFunction<MRS, Out = Result<Ok, Err>>,
+    RS: ResultProcessor<MRS, Ok = Ok, Err = Err>,
     RS::In: SagaEvent,
     OkSaga: Saga<MOP, In = Ok>,
     Ok: SagaEvent,
