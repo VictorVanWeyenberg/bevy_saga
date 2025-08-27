@@ -7,7 +7,10 @@ pub struct EventProcessors<R>
 where
     R: SagaEvent,
 {
+    #[cfg(not(test))]
     ids: Vec<SystemId<R, ()>>,
+    #[cfg(test)]
+    pub ids: Vec<SystemId<R, ()>>,
 }
 
 impl<R> Default for EventProcessors<R>
