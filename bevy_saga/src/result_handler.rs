@@ -55,11 +55,15 @@ where
         OkSaga: Saga<MOP, In = Ok>;
 }
 
-pub trait ErrStage<RS, MRS, MOP, Ok, Err> {
+pub trait ErrStage<RS, MRS, MOP, Ok, Err>
+where
+    RS: ResultProcessor<MRS, Ok = Ok, Err = Err>,
+    RS::In: SagaEvent,
+{
     fn err<ErrSaga, MEP>(
         self,
         err_saga: ErrSaga,
-    ) -> impl EventHandler<ResultHandlerM<(MRS, MOP, MEP)>>
+    ) -> impl EventHandler<ResultHandlerM<(MRS, MOP, MEP)>, In=RS::In>
     where
         MEP: 'static,
         ErrSaga: Saga<MEP, In = Err>;
@@ -103,7 +107,7 @@ where
     fn err<ErrSaga, MEP>(
         self,
         err_saga: ErrSaga,
-    ) -> impl EventHandler<ResultHandlerM<(MRS, MOP, MEP)>>
+    ) -> impl EventHandler<ResultHandlerM<(MRS, MOP, MEP)>, In = RS::In>
     where
         MEP: 'static,
         ErrSaga: Saga<MEP, In = Err>,
