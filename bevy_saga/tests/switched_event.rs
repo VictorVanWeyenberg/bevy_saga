@@ -26,12 +26,20 @@ fn pre_route(Input(input): Input) -> Foobar {
     input
 }
 
+fn sibling_input_handler(Input(_): Input) {
+
+}
+
 fn foo(_: Foo, mut identifier: ResMut<Identifier>) {
     identifier.0 = Some("apple".to_string())
 }
 
 fn bar(_: Bar, mut identifier: ResMut<Identifier>) {
     identifier.0 = Some("banana".to_string())
+}
+
+fn sibling_bar_handler(_: Bar) {
+
 }
 
 fn baz(_: Baz, mut identifier: ResMut<Identifier>) {
@@ -43,7 +51,7 @@ fn test(input: Input, expected: &str) {
     app.init_resource::<Identifier>();
     app.add_saga(
         Update,
-        pre_route.apple(foo).banana(bar).cherry(baz),
+        (pre_route, sibling_input_handler).apple(foo).banana((bar, sibling_bar_handler)).cherry(baz),
     );
     app.world_mut().send_event(input);
     app.update();

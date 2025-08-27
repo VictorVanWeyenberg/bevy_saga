@@ -10,7 +10,7 @@ pub fn generate_processor_trait(input_enum: &InputEnumMetaData) -> TokenStream {
     let mut handler_generics = vec![];
     let mut handler_marker_generics = vec![];
     let mut unpack_variables = vec![];
-    for n in 0u8..1 {
+    for n in 0u8..16 {
         implementations.push(processor_trait_implementation(input_enum, &handler_generics, &handler_marker_generics, &unpack_variables));
         handler_generics.push(format_ident!("ER{}", n));
         handler_marker_generics.push(format_ident!("MER{}", n));
@@ -76,7 +76,7 @@ fn derive_implementation(unpack_variables: &Vec<Ident>, plugin_method_name: Iden
             let (rs, #(#unpack_variables,)*) = self;
             bevy::prelude::IntoScheduleConfigs::into_configs((
                 app.#plugin_method_name(rs),
-                #(app.add_event_handler(#unpack_variables),)*
+                #(bevy_saga::BevySagaUtil::add_event_handler(app, #unpack_variables),)*
             ))
         }
     }

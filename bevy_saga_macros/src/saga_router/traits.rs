@@ -25,6 +25,7 @@ fn trait_from_variants(
     let trait_parameter_marker = to_marker_generic_type(current);
     let trait_parameter_name = trait_parameter_name(current);
     let constraint = to_generic_constraint(current);
+    let handler_field_type = handler_field_type(current);
     let return_trait = util::trait_name(next);
     let tokens = quote! {
         pub trait #trait_name<Source, MarkerSource, #(#generics_stack, )*> {
@@ -33,7 +34,8 @@ fn trait_from_variants(
                 #trait_parameter_name: #trait_parameter_type,
             ) -> impl #return_trait<Source, MarkerSource, #(#generics_stack, )* #trait_parameter_type>
             where
-                #constraint;
+                #constraint,
+                #handler_field_type::In: bevy_saga::SagaEvent;
         }
     };
     generics_stack.push(trait_parameter_type);
@@ -47,14 +49,16 @@ fn last_trait_from_variant(router_type: Ident, variant: &InputVariantMetaData, g
     let trait_parameter_marker = to_marker_generic_type(variant);
     let trait_parameter_name = trait_parameter_name(variant);
     let constraint = to_generic_constraint(variant);
+    let handler_field_type = handler_field_type(variant);
     quote! {
-        trait #trait_name<Source, MarkerSource, #(#generics_stack, )*> {
+        pub trait #trait_name<Source, MarkerSource, #(#generics_stack, )*> {
             fn #trait_method_name<#trait_parameter_type, #trait_parameter_marker>(
                 self,
                 #trait_parameter_name: #trait_parameter_type,
             ) -> #router_type<Source, #(#generics_stack, )* #trait_parameter_type>
             where
-                #constraint;
+                #constraint,
+                #handler_field_type::In: bevy_saga::SagaEvent;
         }
     }
 }
