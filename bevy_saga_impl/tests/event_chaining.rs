@@ -1,6 +1,6 @@
 use bevy::app::{App, Update};
 use bevy::prelude::{Component, Entity, Query, ResMut, Resource};
-use bevy_saga::RegisterSaga;
+use bevy_saga_impl::RegisterSaga;
 use bevy_saga_macros::saga_event;
 
 #[derive(Default, Resource)]

@@ -47,7 +47,7 @@ fn generate_builder_impl(
             for #implementor
         where
             Source: #processor_trait<MarkerSource>,
-            Source::In: bevy_saga::SagaEvent,
+            Source::In: bevy_saga_impl::SagaEvent,
             MarkerSource: 'static,
         {
             #method_definition -> #return_type

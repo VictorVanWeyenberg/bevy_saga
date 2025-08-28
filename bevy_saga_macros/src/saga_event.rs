@@ -16,7 +16,7 @@ fn saga_event_from_tokens(tokens: proc_macro2::TokenStream, ident: proc_macro2::
         #[derive(Clone, bevy::prelude::Event)]
         #tokens
 
-        impl bevy_saga::SagaEvent for #ident {
+        impl bevy_saga_impl::SagaEvent for #ident {
         }
 
         impl bevy::prelude::SystemInput for #ident {

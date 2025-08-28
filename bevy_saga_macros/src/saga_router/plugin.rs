@@ -25,7 +25,7 @@ fn generate_plugin_trait(input_enum: &InputEnumMetaData) -> TokenStream {
                 handler: impl bevy::prelude::IntoSystem<R, #enum_ident, M> + 'static,
             ) -> bevy::ecs::schedule::ScheduleConfigs<bevy::ecs::system::ScheduleSystem>
             where
-                R: bevy_saga::SagaEvent;
+                R: bevy_saga_impl::SagaEvent;
         }
     }
 }
@@ -42,15 +42,15 @@ fn generate_plugin_impl(input_enum: &InputEnumMetaData) -> TokenStream {
                 handler: impl bevy::prelude::IntoSystem<R, #enum_ident, M> + 'static,
             ) -> bevy::ecs::schedule::ScheduleConfigs<bevy::ecs::system::ScheduleSystem>
             where
-                R: bevy_saga::SagaEvent,
+                R: bevy_saga_impl::SagaEvent,
             {
                 self.add_event::<R>();
-                self.init_resource::<bevy_saga::EventProcessors<R>>();
+                self.init_resource::<bevy_saga_impl::prelude::EventProcessors<R>>();
                 let id = self.register_system(handler.pipe(#pipe_system_name));
                 self.world_mut()
-                    .resource_mut::<bevy_saga::EventProcessors<R>>()
+                    .resource_mut::<bevy_saga_impl::prelude::EventProcessors<R>>()
                     .push(id);
-                bevy::prelude::IntoScheduleConfigs::into_configs(bevy_saga::process_event::<R>)
+                bevy::prelude::IntoScheduleConfigs::into_configs(bevy_saga_impl::prelude::process_event::<R>)
             }
         }
     }

@@ -105,7 +105,7 @@ pub fn to_generic_constraint(variant: &InputVariantMetaData) -> TokenStream {
     let marker_generic_type = to_marker_generic_type(variant);
     let ty = &variant.ty;
     quote! {
-        #generic_name: bevy_saga::Saga<#marker_generic_type, In = #ty>
+        #generic_name: bevy_saga_impl::prelude::Saga<#marker_generic_type, In = #ty>
     }
 }
 

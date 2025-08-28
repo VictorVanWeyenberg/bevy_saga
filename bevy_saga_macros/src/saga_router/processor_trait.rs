@@ -28,7 +28,7 @@ fn processor_trait_definition(input_enum: &InputEnumMetaData) -> TokenStream {
     let method_name = processor_trait_method_name(input_enum);
     quote! {
         pub trait #trait_name<M> {
-            type In: bevy_saga::SagaEvent;
+            type In: bevy_saga_impl::SagaEvent;
 
             fn #method_name(self, app: &mut bevy::prelude::App) -> bevy::ecs::schedule::ScheduleConfigs<bevy::ecs::system::ScheduleSystem>;
         }
@@ -47,7 +47,7 @@ fn processor_trait_implementation(input_enum: &InputEnumMetaData, handler_generi
         where
             RS: bevy::prelude::SystemParamFunction<MRS, In = In, Out = #enum_ident>,
             #(#handler_generics: bevy::prelude::SystemParamFunction<#handler_marker_generics, In = In, Out = ()>,)*
-            In: bevy_saga::SagaEvent,
+            In: bevy_saga_impl::SagaEvent,
             MRS: 'static,
             #(#handler_marker_generics: 'static,)*
         {
@@ -76,7 +76,7 @@ fn derive_implementation(unpack_variables: &Vec<Ident>, plugin_method_name: Iden
             let (rs, #(#unpack_variables,)*) = self;
             bevy::prelude::IntoScheduleConfigs::into_configs((
                 app.#plugin_method_name(rs),
-                #(bevy_saga::BevySagaUtil::add_event_handler(app, #unpack_variables),)*
+                #(bevy_saga_impl::prelude::BevySagaUtil::add_event_handler(app, #unpack_variables),)*
             ))
         }
     }

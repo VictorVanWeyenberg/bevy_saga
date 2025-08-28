@@ -1,6 +1,6 @@
 use crate::handler::EventHandler;
 use crate::result_processor::ResultProcessor;
-use crate::{Saga, SagaEvent};
+use crate::{SagaEvent, prelude::Saga};
 use bevy::app::App;
 use bevy::ecs::schedule::ScheduleConfigs;
 use bevy::ecs::system::ScheduleSystem;

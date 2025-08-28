@@ -1,6 +1,6 @@
 [workspace]
 members = [
-    "bevy_saga",
+    "bevy_saga_impl",
     "bevy_saga_macros"
 ]
 resolver = "2"

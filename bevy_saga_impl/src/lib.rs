@@ -44,7 +44,7 @@
 //! It is recommended to first read the [plugin documentation](RegisterSaga) before reading this
 //! section.
 //!
-//! In bevy_saga you register _event processor_ functions.
+//! In bevy_saga_impl you register _event processor_ functions.
 //! Event processor functions have two events: one as input parameter and one as output parameter.
 //! By structuring those event processors in tuples, Rust can check if the output of one
 //! system is the same type as the input of the following system. This is done using
@@ -81,14 +81,15 @@
 //! By piping `event_processor` to `send_response`, we get one
 //! [PipedSystem](bevy::ecs::system::PipeSystem) with an input (your event) and no output.
 //! This system can be [registered in the app](bevy::prelude::App::register_system) and
-//! the [SystemId](bevy::ecs::system::SystemId) is then stored in the [EventProcessors] resource.
+//! the [SystemId](bevy::ecs::system::SystemId) is then stored in the
+//! [EventProcessors](prelude::EventProcessors) resource.
 //!
-//! Finally, bevy_saga owns some generic [EventReader](bevy::prelude::EventReader) systems.
+//! Finally, bevy_saga_impl owns some generic [EventReader](bevy::prelude::EventReader) systems.
 //! Such a system looks like this:
 //!
 //! ```
 //! # use bevy::prelude::{ResMut, Events, Res, Commands};
-//! # use bevy_saga::{EventProcessors, SagaEvent};
+//! # use bevy_saga_impl::{SagaEvent, prelude::{EventProcessors}};
 //! pub fn process_event<R>(
 //!     mut reader: ResMut<Events<R>>,
 //!     handler: Res<EventProcessors<R>>,
@@ -96,22 +97,18 @@
 //! ) where
 //!     R: SagaEvent,
 //! {
-//!     for event in reader.drain() {
-//!         for id in &handler.ids {
-//!             commands.run_system_with(*id, event.clone())
-//!         }
-//!     }
+//!     // Pass all the `events` in reader to all processors in `handler`. 
 //! }
 //! ```
 //!
 //! Bevy_saga will drain all events from the [Events](bevy::prelude::Events) resource. The
-//! [EventProcessors] resource holds all the [SystemIds](bevy::ecs::system::SystemId) for the piped
+//! [EventProcessors](prelude::EventProcessors) resource holds all the [SystemIds](bevy::ecs::system::SystemId) for the piped
 //! systems that handle your input event. The piped systems are run through the
 //! [Commands](bevy::prelude::Commands).
 //!
-//! The last thing bevy_saga needs to do is order all the event reading systems. This is done
+//! The last thing bevy_saga_impl needs to do is order all the event reading systems. This is done
 //! through recursively returning those systems. When you write a saga and register it in the
-//! [plugin](RegisterSaga), bevy_saga will generate one big
+//! [plugin](RegisterSaga), bevy_saga_impl will generate one big
 //! [schedule system](bevy::prelude::IntoScheduleConfigs) that uses all your event processor
 //! systems.
 //!
@@ -124,7 +121,7 @@
 //! ```
 //! use bevy::app::App;
 //! use bevy::prelude::{Component, Entity, Query, Update};
-//! use bevy_saga::{OkStage, ErrStage, RegisterSaga};
+//! use bevy_saga_impl::{RegisterSaga, prelude::{OkStage, ErrStage}};
 //! use bevy_saga_macros::saga_event;
 //!
 //! #[derive(Component)]
@@ -256,7 +253,7 @@
 //!
 //! # Bevy Compatibility Matrix
 //!
-//! | bevy_saga | bevy |
+//! | bevy_saga_impl | bevy |
 //! |-----------|------|
 //! | 0.1       | 0.16 |
 
@@ -265,17 +262,13 @@ use bevy::prelude::{Event, SystemInput};
 mod handler;
 mod option_processor;
 mod plugin;
+pub mod prelude;
 mod processor;
 mod result_handler;
 mod result_processor;
 mod saga;
 mod util;
 
-pub use handler::EventHandler;
-pub use plugin::{BevySagaUtil, RegisterSaga};
-pub use processor::EventProcessor;
-pub use result_handler::{ErrStage, OkStage};
-pub use saga::Saga;
-pub use util::{EventProcessors, process_event};
+pub use plugin::RegisterSaga;
 
 pub trait SagaEvent: Event + Clone + SystemInput<Inner<'static> = Self> {}

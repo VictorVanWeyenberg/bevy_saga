@@ -48,11 +48,11 @@ fn event_handler_impl(input_enum: &InputEnumMetaData) -> TokenStream {
             #(#generics, )*
             MarkerSource,
             #(#marker_generics, )*
-        > bevy_saga::EventHandler<(MarkerSource, #(#marker_generics, )*)>
+        > bevy_saga_impl::prelude::EventHandler<(MarkerSource, #(#marker_generics, )*)>
         for #struct_ident<Source, #(#generics, )*>
         where
             Source: #processor_trait<MarkerSource>,
-            Source::In: bevy_saga::SagaEvent,
+            Source::In: bevy_saga_impl::SagaEvent,
             #(#constraints, )*
             MarkerSource: 'static,
         {

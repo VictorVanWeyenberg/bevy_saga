@@ -35,7 +35,7 @@ fn trait_from_variants(
             ) -> impl #return_trait<Source, MarkerSource, #(#generics_stack, )* #trait_parameter_type>
             where
                 #constraint,
-                #handler_field_type::In: bevy_saga::SagaEvent;
+                #handler_field_type::In: bevy_saga_impl::SagaEvent;
         }
     };
     generics_stack.push(trait_parameter_type);
@@ -58,7 +58,7 @@ fn last_trait_from_variant(router_type: Ident, variant: &InputVariantMetaData, g
             ) -> #router_type<Source, #(#generics_stack, )* #trait_parameter_type>
             where
                 #constraint,
-                #handler_field_type::In: bevy_saga::SagaEvent;
+                #handler_field_type::In: bevy_saga_impl::SagaEvent;
         }
     }
 }
