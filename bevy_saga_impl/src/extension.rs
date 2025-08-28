@@ -5,6 +5,19 @@ use bevy::ecs::schedule::{ScheduleConfigs, ScheduleLabel};
 use bevy::ecs::system::ScheduleSystem;
 use bevy::prelude::{App, Event, IntoScheduleConfigs, IntoSystem};
 
+/// The extension trait where sagas are added to the bevy App.
+/// 
+/// This is the place where you add sagas to the [app](App). Define a saga and pass it to the 
+/// [add_saga](SagaRegistry::add_saga) method together with a [ScheduleLabel](ScheduleLabel).
+/// 
+/// During the update cycle, when the schedule under the label is executed, all sent events will be 
+/// propagated through the saga in one update cycle.
+/// 
+/// If multiple sagas are registered under the same label, they will be executed concurrently.
+/// To order sagas in reference to each other, we recommend to add extra 
+/// [ScheduleLabels](ScheduleLabel).
+/// 
+/// Learn how to write a saga [here](Saga).
 pub trait SagaRegistry {
     fn add_saga<M, L>(&mut self, label: L, saga: impl Saga<M>) -> &mut Self
     where
