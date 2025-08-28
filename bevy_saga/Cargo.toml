@@ -1,0 +1,11 @@
+[package]
+name = "bevy_saga"
+version = "0.1.0"
+edition = "2024"
+
+[dependencies]
+bevy_saga_impl = { path = "../bevy_saga_impl" }
+bevy_saga_macros = { path = "../bevy_saga_macros" }
+
+[dev-dependencies]
+bevy = { version = "0.16", default-features = false }

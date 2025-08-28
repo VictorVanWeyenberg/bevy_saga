@@ -1,6 +1,6 @@
 use bevy::prelude::{App, ResMut, Resource, Update};
-use bevy_saga_impl::RegisterSaga;
-use bevy_saga_macros::saga_event;
+use bevy_saga::RegisterSaga;
+use bevy_saga::saga_event;
 
 #[test]
 fn big_big_saga_for_big_decisions() {

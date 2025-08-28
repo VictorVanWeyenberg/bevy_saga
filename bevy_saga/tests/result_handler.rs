@@ -1,6 +1,6 @@
 use bevy::prelude::{App, Update, ResMut, Resource};
-use bevy_saga_impl::{RegisterSaga, prelude::{Saga, OkStage, ErrStage}};
-use bevy_saga_macros::saga_event;
+use bevy_saga::{RegisterSaga, prelude::{Saga, OkStage, ErrStage}};
+use bevy_saga::saga_event;
 
 #[derive(Default, Resource)]
 struct Counter(u8);
