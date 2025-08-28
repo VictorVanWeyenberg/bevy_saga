@@ -1,4 +1,4 @@
-use crate::saga_router::util::{plugin_add_handler_method_name, processor_trait_method_name, processor_trait_name};
+use crate::saga_router::util::{extension_add_handler_method_name, processor_trait_method_name, processor_trait_name};
 use crate::saga_router::InputEnumMetaData;
 use proc_macro2::{Ident, TokenStream};
 use quote::{format_ident, quote};
@@ -39,9 +39,9 @@ fn processor_trait_implementation(input_enum: &InputEnumMetaData, handler_generi
     let enum_ident = &input_enum.enum_ident;
     let trait_name = processor_trait_name(input_enum);
     let method_name = processor_trait_method_name(input_enum);
-    let plugin_method_name = plugin_add_handler_method_name(input_enum);
+    let extension_method_name = extension_add_handler_method_name(input_enum);
     let implementor = derive_implementor(handler_generics);
-    let implementation = derive_implementation(unpack_variables, plugin_method_name);
+    let implementation = derive_implementation(unpack_variables, extension_method_name);
     quote! {
         impl<RS, MRS, #(#handler_generics,)* #(#handler_marker_generics,)* In> #trait_name<(MRS, #(#handler_marker_generics,)*)> for #implementor
         where
@@ -68,14 +68,14 @@ fn derive_implementor(handler_generics: &Vec<Ident>) -> TokenStream {
     }
 }
 
-fn derive_implementation(unpack_variables: &Vec<Ident>, plugin_method_name: Ident) -> TokenStream {
+fn derive_implementation(unpack_variables: &Vec<Ident>, extension_method_name: Ident) -> TokenStream {
     if unpack_variables.is_empty() {
-        quote! { app.#plugin_method_name(self) }
+        quote! { app.#extension_method_name(self) }
     } else {
         quote! {
             let (rs, #(#unpack_variables,)*) = self;
             bevy::prelude::IntoScheduleConfigs::into_configs((
-                app.#plugin_method_name(rs),
+                app.#extension_method_name(rs),
                 #(bevy_saga_impl::prelude::BevySagaUtil::add_event_handler(app, #unpack_variables),)*
             ))
         }

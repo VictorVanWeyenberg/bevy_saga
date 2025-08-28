@@ -1,5 +1,5 @@
 use crate::SagaEvent;
-use crate::plugin::BevySagaUtil;
+use crate::extension::BevySagaUtil;
 use bevy::app::App;
 use bevy::ecs::schedule::ScheduleConfigs;
 use bevy::ecs::system::ScheduleSystem;

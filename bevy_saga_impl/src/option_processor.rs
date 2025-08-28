@@ -1,5 +1,5 @@
 use crate::processor::EventProcessor;
-use crate::{SagaEvent, plugin::BevySagaUtil};
+use crate::{SagaEvent, extension::BevySagaUtil};
 use bevy::ecs::schedule::ScheduleConfigs;
 use bevy::ecs::system::ScheduleSystem;
 use bevy::prelude::{App, Event, IntoScheduleConfigs, SystemParamFunction};

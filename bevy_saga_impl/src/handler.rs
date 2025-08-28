@@ -1,4 +1,4 @@
-use crate::{plugin::BevySagaUtil, SagaEvent};
+use crate::{extension::BevySagaUtil, SagaEvent};
 use bevy::ecs::schedule::ScheduleConfigs;
 use bevy::ecs::system::ScheduleSystem;
 use bevy::prelude::{App, IntoScheduleConfigs, SystemParamFunction};

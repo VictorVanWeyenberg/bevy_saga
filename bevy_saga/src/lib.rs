@@ -1,16 +1,17 @@
-//! An event and system management plugin for Bevy.
+//! An event and system management extension for Bevy.
 //!
-//! Bevy_saga is a plugin for Bevy that allows you to easily process events by chaining event processors.
-//! Most public items are only made public for the internal workings of bevy_saga.
-//! The only item you'll directly interact with is the plugin itself: [SagaRegistry].
+//! Bevy_saga is an extension for Bevy that allows you to easily process events by chaining event 
+//! processors. Most public items are only made public for the internal workings of bevy_saga.
+//! The only item you'll directly interact with is the extension itself: [SagaRegistry].
 //!
-//! Read the plugin documentation [here](SagaRegistry).
+//! Read the extension documentation [here](SagaRegistry).
 //!
 //! # Benefits
 //!
 //! - You no longer have to write the boilerplate code to read or write events from or to
 //!   [EventReaders](bevy::prelude::EventReader) or [EventWriters](bevy::prelude::EventWriter).
-//! - You no longer have to order the systems manually. The plugin does that automatically for you.
+//! - You no longer have to order the systems manually. The extension does that automatically for 
+//!   you.
 //! - Contrary to Bevy, you'll get a compilation error if you change input or output events on
 //!   systems. Event chains are type-checked.
 //! - All sagas fully handle all sent events in one update cycle. Bevy_saga guarantees no frame
@@ -41,7 +42,7 @@
 //!
 //! # How it works
 //!
-//! It is recommended to first read the [plugin documentation](SagaRegistry) before reading this
+//! It is recommended to first read the [extension documentation](SagaRegistry) before reading this
 //! section.
 //!
 //! In bevy_saga_impl you register _event processor_ functions.
@@ -82,7 +83,7 @@
 //! [PipedSystem](bevy::ecs::system::PipeSystem) with an input (your event) and no output.
 //! This system can be [registered in the app](bevy::prelude::App::register_system) and
 //! the [SystemId](bevy::ecs::system::SystemId) is then stored in the
-//! [EventProcessors](bevy_saga_impl::prelude::EventProcessors) resource.
+//! [EventProcessors](prelude::EventProcessors) resource.
 //!
 //! Finally, bevy_saga_impl owns some generic [EventReader](bevy::prelude::EventReader) systems.
 //! Such a system looks like this:
@@ -102,13 +103,13 @@
 //! ```
 //!
 //! Bevy_saga will drain all events from the [Events](bevy::prelude::Events) resource. The
-//! [EventProcessors](bevy_saga_impl::prelude::EventProcessors) resource holds all the [SystemIds](bevy::ecs::system::SystemId) for the piped
-//! systems that handle your input event. The piped systems are run through the
-//! [Commands](bevy::prelude::Commands).
+//! [EventProcessors](prelude::EventProcessors) resource holds all the 
+//! [SystemIds](bevy::ecs::system::SystemId) for the piped systems that handle your input event. 
+//! The piped systems are run through the [Commands](bevy::prelude::Commands).
 //!
 //! The last thing bevy_saga_impl needs to do is order all the event reading systems. This is done
 //! through recursively returning those systems. When you write a saga and register it in the
-//! [plugin](SagaRegistry), bevy_saga_impl will generate one big
+//! [extension](SagaRegistry), bevy_saga_impl will generate one big
 //! [schedule system](bevy::prelude::IntoScheduleConfigs) that uses all your event processor
 //! systems.
 //!

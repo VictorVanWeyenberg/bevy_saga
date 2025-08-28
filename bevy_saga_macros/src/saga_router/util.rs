@@ -40,7 +40,7 @@ pub fn saga_register_calls(input_enum: &InputEnumMetaData) -> Vec<TokenStream> {
         .collect()
 }
 
-pub fn plugin_add_handler_method_name(input_enum: &InputEnumMetaData) -> Ident {
+pub fn extension_add_handler_method_name(input_enum: &InputEnumMetaData) -> Ident {
     format_ident!("add_{}_handler", enum_ident_snake_case(input_enum))
 }
 
@@ -48,8 +48,8 @@ fn enum_ident_snake_case(input_enum: &InputEnumMetaData) -> String {
     snake_case(input_enum.enum_ident.to_string().as_str())
 }
 
-pub fn plugin_trait_name(input_enum: &InputEnumMetaData) -> Ident {
-    format_ident!("{}Plugin", input_enum.enum_ident)
+pub fn extension_trait_name(input_enum: &InputEnumMetaData) -> Ident {
+    format_ident!("{}extension", input_enum.enum_ident)
 }
 
 pub fn router_struct_name(input_enum: &InputEnumMetaData) -> Ident {

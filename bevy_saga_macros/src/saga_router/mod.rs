@@ -7,7 +7,7 @@ use crate::saga_router::processor_trait::generate_processor_trait;
 mod builder_impl;
 mod builders;
 mod event_handler;
-mod plugin;
+mod extension;
 mod processor_trait;
 mod traits;
 mod util;
@@ -42,14 +42,14 @@ fn generate_routing_context(meta_data: InputEnumMetaData) -> TokenStream {
     let traits = traits::generate_traits(&meta_data);
     let builders = builders::generate_builders(&meta_data);
     let builder_impls = builder_impl::generate_builder_impls(&meta_data);
-    let plugin = plugin::generate_plugin(&meta_data);
+    let extension = extension::generate_extension(&meta_data);
     quote! {
         #processor_trait
         #event_handler_context
         #(#traits)*
         #(#builders)*
         #(#builder_impls)*
-        #plugin
+        #extension
     }
 }
 

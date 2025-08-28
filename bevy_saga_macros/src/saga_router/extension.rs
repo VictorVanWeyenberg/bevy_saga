@@ -1,25 +1,25 @@
 use proc_macro2::TokenStream;
 use quote::quote;
 use crate::saga_router::InputEnumMetaData;
-use crate::saga_router::util::{pipe_system_name, plugin_add_handler_method_name, plugin_trait_name, to_variant_idents, to_variant_types, to_writer_parameters};
+use crate::saga_router::util::{pipe_system_name, extension_add_handler_method_name, extension_trait_name, to_variant_idents, to_variant_types, to_writer_parameters};
 
-pub fn generate_plugin(input_enum: &InputEnumMetaData) -> TokenStream {
-    let plugin_trait = generate_plugin_trait(input_enum);
-    let plugin_impl = generate_plugin_impl(input_enum);
+pub fn generate_extension(input_enum: &InputEnumMetaData) -> TokenStream {
+    let extension_trait = generate_extension_trait(input_enum);
+    let extension_impl = generate_extension_impl(input_enum);
     let pipe_system = generate_pipe_system(input_enum);
     quote! {
-        #plugin_trait
-        #plugin_impl
+        #extension_trait
+        #extension_impl
         #pipe_system
     }
 }
 
-fn generate_plugin_trait(input_enum: &InputEnumMetaData) -> TokenStream {
-    let plugin_trait_name = plugin_trait_name(input_enum);
-    let method_name = plugin_add_handler_method_name(input_enum);
+fn generate_extension_trait(input_enum: &InputEnumMetaData) -> TokenStream {
+    let extension_trait_name = extension_trait_name(input_enum);
+    let method_name = extension_add_handler_method_name(input_enum);
     let enum_ident = &input_enum.enum_ident;
     quote! {
-        pub trait #plugin_trait_name {
+        pub trait #extension_trait_name {
             fn #method_name<R, M>(
                 &mut self,
                 handler: impl bevy::prelude::IntoSystem<R, #enum_ident, M> + 'static,
@@ -30,13 +30,13 @@ fn generate_plugin_trait(input_enum: &InputEnumMetaData) -> TokenStream {
     }
 }
 
-fn generate_plugin_impl(input_enum: &InputEnumMetaData) -> TokenStream {
-    let plugin_trait_name = plugin_trait_name(input_enum);
-    let method_name = plugin_add_handler_method_name(input_enum);
+fn generate_extension_impl(input_enum: &InputEnumMetaData) -> TokenStream {
+    let extension_trait_name = extension_trait_name(input_enum);
+    let method_name = extension_add_handler_method_name(input_enum);
     let enum_ident = &input_enum.enum_ident;
     let pipe_system_name = pipe_system_name(input_enum);
     quote! {
-        impl #plugin_trait_name for bevy::prelude::App {
+        impl #extension_trait_name for bevy::prelude::App {
             fn #method_name<R, M>(
                 &mut self,
                 handler: impl bevy::prelude::IntoSystem<R, #enum_ident, M> + 'static,
