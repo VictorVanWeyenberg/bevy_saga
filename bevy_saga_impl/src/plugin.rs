@@ -5,13 +5,13 @@ use bevy::ecs::schedule::{ScheduleConfigs, ScheduleLabel};
 use bevy::ecs::system::ScheduleSystem;
 use bevy::prelude::{App, Event, IntoScheduleConfigs, IntoSystem};
 
-pub trait RegisterSaga {
+pub trait SagaRegistry {
     fn add_saga<M, L>(&mut self, label: L, saga: impl Saga<M>) -> &mut Self
     where
         L: ScheduleLabel + Clone;
 }
 
-impl RegisterSaga for App {
+impl SagaRegistry for App {
     fn add_saga<M, L>(&mut self, label: L, saga: impl Saga<M>) -> &mut Self
     where
         L: ScheduleLabel + Clone,

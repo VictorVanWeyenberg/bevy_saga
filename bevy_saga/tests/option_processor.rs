@@ -1,5 +1,5 @@
 use bevy::prelude::{App, ResMut, Resource, Update};
-use bevy_saga::{RegisterSaga, prelude::Saga};
+use bevy_saga::{SagaRegistry, prelude::Saga};
 use bevy_saga::saga_event;
 
 #[derive(Default, Resource)]

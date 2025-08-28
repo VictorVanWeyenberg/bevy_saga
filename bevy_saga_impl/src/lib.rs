@@ -10,6 +10,6 @@ mod result_processor;
 mod saga;
 mod util;
 
-pub use plugin::RegisterSaga;
+pub use plugin::SagaRegistry;
 
 pub trait SagaEvent: Event + Clone + SystemInput<Inner<'static> = Self> {}

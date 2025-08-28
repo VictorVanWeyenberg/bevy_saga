@@ -2,9 +2,9 @@
 //!
 //! Bevy_saga is a plugin for Bevy that allows you to easily process events by chaining event processors.
 //! Most public items are only made public for the internal workings of bevy_saga.
-//! The only item you'll directly interact with is the plugin itself: [RegisterSaga].
+//! The only item you'll directly interact with is the plugin itself: [SagaRegistry].
 //!
-//! Read the plugin documentation [here](RegisterSaga).
+//! Read the plugin documentation [here](SagaRegistry).
 //!
 //! # Benefits
 //!
@@ -41,7 +41,7 @@
 //!
 //! # How it works
 //!
-//! It is recommended to first read the [plugin documentation](RegisterSaga) before reading this
+//! It is recommended to first read the [plugin documentation](SagaRegistry) before reading this
 //! section.
 //!
 //! In bevy_saga_impl you register _event processor_ functions.
@@ -108,7 +108,7 @@
 //!
 //! The last thing bevy_saga_impl needs to do is order all the event reading systems. This is done
 //! through recursively returning those systems. When you write a saga and register it in the
-//! [plugin](RegisterSaga), bevy_saga_impl will generate one big
+//! [plugin](SagaRegistry), bevy_saga_impl will generate one big
 //! [schedule system](bevy::prelude::IntoScheduleConfigs) that uses all your event processor
 //! systems.
 //!
@@ -121,7 +121,7 @@
 //! ```
 //! use bevy::app::App;
 //! use bevy::prelude::{Component, Entity, Query, Update};
-//! use bevy_saga_impl::{RegisterSaga, prelude::{OkStage, ErrStage}};
+//! use bevy_saga_impl::{SagaRegistry, prelude::{OkStage, ErrStage}};
 //! use bevy_saga_macros::saga_event;
 //!
 //! #[derive(Component)]
