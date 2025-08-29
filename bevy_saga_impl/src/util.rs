@@ -2,14 +2,15 @@ use crate::SagaEvent;
 use bevy::ecs::system::SystemId;
 use bevy::prelude::{Commands, Event, EventWriter, Events, In, Res, ResMut, Resource};
 
+/// A resource used by bevy_saga to save the SystemIds of your event processors and handlers.
+///
+/// It's not recommended to use this resource in your own code. It's exported from the crate for the
+///`#[saga_router]` macro.
 #[derive(Resource)]
 pub struct EventProcessors<R>
 where
     R: SagaEvent,
 {
-    #[cfg(test)]
-    pub ids: Vec<SystemId<R, ()>>,
-    #[cfg(not(test))]
     ids: Vec<SystemId<R, ()>>,
 }
 
@@ -31,6 +32,10 @@ where
     }
 }
 
+/// A system used by bevy_saga to order your event processors and handlers.
+///
+/// It is not recommended to use this system in your own code. It's exported from the crate for the
+/// `#[saga_router]` macro.
 pub fn process_event<R>(
     mut reader: ResMut<Events<R>>,
     handler: Res<EventProcessors<R>>,

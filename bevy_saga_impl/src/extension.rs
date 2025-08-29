@@ -35,6 +35,11 @@ impl SagaRegistry for App {
     }
 }
 
+/// A trait used by bevy_saga to add the SystemIds of your event processors and handlers to the 
+/// [EventProcessors](EventProcessors) resource.
+///
+/// It's not recommended to use this trait in your own code. It's exported from the crate for the
+///`#[saga_router]` macro.
 pub trait BevySagaUtil {
     fn add_event_processor<R, Rs, M>(
         &mut self,

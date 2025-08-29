@@ -44,6 +44,7 @@ where
     }
 }
 
+/// This trait provides the `ok` method when working with [Result Handlers](EventHandler).
 pub trait OkStage<RS, MRS, Ok, Err>
 where
     RS: ResultProcessor<MRS, Ok = Ok, Err = Err>,
@@ -55,6 +56,7 @@ where
         OkSaga: Saga<MOP, In = Ok>;
 }
 
+/// This trait provides the `err` method when working with [Result Handlers](EventHandler).
 pub trait ErrStage<RS, MRS, MOP, Ok, Err>
 where
     RS: ResultProcessor<MRS, Ok = Ok, Err = Err>,
