@@ -7,6 +7,7 @@ use syn::{parse_macro_input, Item};
 mod saga_event;
 mod saga_router;
 
+/// Used to implement the SagaEvent trait for types that are propagated through sagas. 
 #[proc_macro_attribute]
 pub fn saga_event(_attr: TokenStream, item: TokenStream) -> TokenStream {
     match parse_macro_input!(item as Item) {
@@ -18,6 +19,12 @@ pub fn saga_event(_attr: TokenStream, item: TokenStream) -> TokenStream {
     }.into()
 }
 
+/// Used to create event routers.
+/// 
+/// Event routers are event processors that return an enum. Depending on which enum value is 
+/// returned, a different saga is triggered.
+/// 
+/// Refer to the bevy_saga documentation for more information.
 #[proc_macro_attribute]
 pub fn saga_router(_attr: TokenStream, item: TokenStream) -> TokenStream {
     match parse_macro_input!(item as Item) {
