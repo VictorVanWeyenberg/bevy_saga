@@ -15,7 +15,7 @@
 //! - Bevy_saga encourages single-responsibility design. You can write smaller systems that are
 //!   easier to unit test.
 //! - Contrary to Bevy, you'll get a compilation error if you change input or output events on
-//!   systems. Event chains are type-checked.
+//!   processors or handlers.
 //! - All sagas fully handle all sent events in one update cycle. Bevy_saga guarantees no frame
 //!   delay.
 //!
@@ -24,7 +24,7 @@
 //! It is recommended to first read the [extension documentation](SagaRegistry) before reading this
 //! section.
 //!
-//! In bevy_saga_impl you register _event processor_ functions.
+//! In bevy_saga you register _event processor_ functions.
 //! Event processor functions have two events: one as input parameter and one as output parameter.
 //! By structuring those event processors in tuples, Rust can check if the output of one
 //! system is the same type as the input of the following system. This is done using
@@ -57,7 +57,7 @@
 //! developer.
 //!
 //! By piping `event_processor` to `send_response`, we get one
-//! [PipedSystem](bevy::ecs::system::PipeSystem) with an input (your event) and no output.
+//! [PipeSystem](bevy::ecs::system::PipeSystem) with an input (your event) and no output.
 //! This system can be [registered in the app](bevy::prelude::App::register_system) and
 //! the [SystemId](bevy::ecs::system::SystemId) is then stored in the
 //! [EventProcessors](prelude::EventProcessors) resource.
@@ -84,11 +84,11 @@
 //! [SystemIds](bevy::ecs::system::SystemId) for the piped systems that handle your input event. 
 //! The piped systems are run through the [Commands](bevy::prelude::Commands).
 //!
-//! The last thing bevy_saga_impl needs to do is order all the event reading systems. This is done
-//! through recursively returning those systems. When you write a saga and register it in the
-//! [extension](SagaRegistry), bevy_saga_impl will generate one big
-//! [schedule system](bevy::prelude::IntoScheduleConfigs) that uses all your event processor
-//! systems.
+//! The last thing bevy_saga needs to do is order all the event reading systems. This is done
+//! through recursively returning those systems while we register the pipes in the extension. When
+//! you write a saga and register it in the [extension](SagaRegistry), bevy_saga will generate
+//! one big [schedule system](bevy::prelude::IntoScheduleConfigs) that uses all your event
+//! processor systems.
 //!
 //! Bevy_saga hides all the boilerplate in generic methods. That boilerplate is prepended and
 //! appended to the event processors you provide. Finally, those composite systems are ordered.
@@ -106,16 +106,6 @@
 //! that system.
 //!
 //! The way bevy_saga is built always allows you to add such a system to the saga.
-//!
-//! > Sagas cannot directly be ordered in reference to each other.
-//!
-//! Bevy_saga will probably be used in larger projects. In such projects, modules will export only
-//! an event processor system while the rest of the module handles that event. In some cases your
-//! architecture doesn't allow you to export certain systems outside a certain hierarchy. In that
-//! case you won't be able to order concealed systems in one saga.
-//!
-//! This is a simple architectural problem. We recommend using
-//! [ScheduleLabels](bevy::ecs::schedule::ScheduleLabel) if you want to order sagas.
 //!
 //! # Example
 //!
