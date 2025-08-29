@@ -32,10 +32,14 @@ jobs:
         run: cargo test
       - name: Build the doc
         run: cargo doc --no-deps
+      - name: Add redirect
+        run: echo '<meta http-equiv="refresh" content="0;url=bevy_saga/index.html">' > target/doc/index.html
+      - name: Remove lock file
+        run: rm target/doc/.lock
       - name: Upload artifact
         uses: actions/upload-pages-artifact@v3
         with:
-          path: ./target/doc
+          path: target/doc
 
   deploy:
     environment:
