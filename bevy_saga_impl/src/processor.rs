@@ -14,14 +14,23 @@ use variadics_please::all_tuples;
 /// Both the input and output types have to be attributed with `saga_event`.
 /// 
 /// All systems in the collection are executed concurrently.
+/// 
+/// # Option Processor
+/// 
+/// There is one special type of event processor: the Option processor.
+/// 
+/// This processor accepts a saga event and returns an [Option](Option) of a saga event.
+/// If the option is Some, the containing value will be passed on to the following processors or 
+/// handler in the saga.
+/// If the option is empty, the following processors or handler in the saga won't be executed.
+/// 
+/// # Example
 ///
 /// ```
 /// # use bevy::app::{App, Update};
 /// # use bevy::prelude::{Component, Query};
 /// # use bevy_saga_impl::SagaRegistry;
 /// # use bevy_saga_macros::saga_event;
-/// # #[derive(Component)]
-/// # struct Health;
 /// #[saga_event]
 /// struct A;
 ///
@@ -29,11 +38,11 @@ use variadics_please::all_tuples;
 /// struct B;
 ///
 /// fn process_event(_: A, /* other queries or resources */) -> B { B }
-/// fn sibling1(_: A, health: Query<&Health>) { }
-/// fn sibling2(_: A) { }
-/// fn sibling3(_: A) { }
+/// fn sibling1(_: A, /* other queries or resources */) { }
+/// fn sibling2(_: A, /* other queries or resources */) { }
+/// fn sibling3(_: A, /* other queries or resources */) { }
 ///
-/// fn handler(_: B) { }
+/// fn handler(_: B, /* other queries or resources */) { }
 ///
 /// # let mut app = App::new();
 ///
@@ -43,6 +52,14 @@ use variadics_please::all_tuples;
 ///
 /// // A processor can also be accompanied by other functions the handle the event.
 /// let processor = (process_event, sibling1, sibling2, sibling3);
+/// app.add_saga(Update, (processor, handler));
+/// 
+/// // Let's try an option processor:
+/// fn maybe_process_event(_: A, /* other queries or resources */) -> Option<B> {
+///     None
+/// }
+/// 
+/// let processor = (maybe_process_event, sibling1, sibling2);
 /// app.add_saga(Update, (processor, handler));
 /// ```
 pub trait EventProcessor<M> {
