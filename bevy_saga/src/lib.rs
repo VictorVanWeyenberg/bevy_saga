@@ -12,33 +12,12 @@
 //!   [EventReaders](bevy::prelude::EventReader) or [EventWriters](bevy::prelude::EventWriter).
 //! - You no longer have to order the systems manually. The extension does that automatically for 
 //!   you.
+//! - Bevy_saga encourages single-responsibility design. You can write smaller systems that are
+//!   easier to unit test.
 //! - Contrary to Bevy, you'll get a compilation error if you change input or output events on
 //!   systems. Event chains are type-checked.
 //! - All sagas fully handle all sent events in one update cycle. Bevy_saga guarantees no frame
 //!   delay.
-//!
-//! # Pitfalls
-//!
-//! > Once you use bevy_saga, you won't be able to register separate event reading systems that use
-//! > the events that are in the saga.
-//!
-//! We drain the events from the [Events](bevy::prelude::Events) buffer. This is a method of
-//! manually managing the lifetime of events. We do this to prevent an event of triggering a system
-//! chain more than once. Because we manually drain the events from the buffer, if you register
-//! another system that expects that event, it cannot be guaranteed that the event will trigger
-//! that system.
-//!
-//! The way bevy_saga is built always allows you to add such a system to the saga.
-//!
-//! > Sagas cannot directly be ordered in reference to each other.
-//!
-//! Bevy_saga will probably be used in larger projects. In such projects, modules will export only
-//! an event processor system while the rest of the module handles that event. In some cases your
-//! architecture doesn't allow you to export certain systems outside a certain hierarchy. In that
-//! case you won't be able to order concealed systems in one saga.
-//!
-//! This is a simple architectural problem. We recommend using
-//! [ScheduleLabels](bevy::ecs::schedule::ScheduleLabel) if you want to order sagas.
 //!
 //! # How it works
 //!
@@ -61,8 +40,6 @@
 //!     Output
 //! }
 //! ```
-//!
-//!
 //!
 //! ... Then the _send system_ looks like this:
 //!
@@ -116,6 +93,29 @@
 //! Bevy_saga hides all the boilerplate in generic methods. That boilerplate is prepended and
 //! appended to the event processors you provide. Finally, those composite systems are ordered.
 //! Everything is checked at compile time.
+//!
+//! # Pitfalls
+//!
+//! > Once you use bevy_saga, you won't be able to register separate event reading systems that use
+//! > the events that are in the saga.
+//!
+//! We drain the events from the [Events](bevy::prelude::Events) buffer. This is a method of
+//! manually managing the lifetime of events. We do this to prevent an event of triggering a system
+//! chain more than once. Because we manually drain the events from the buffer, if you register
+//! another system that expects that event, it cannot be guaranteed that the event will trigger
+//! that system.
+//!
+//! The way bevy_saga is built always allows you to add such a system to the saga.
+//!
+//! > Sagas cannot directly be ordered in reference to each other.
+//!
+//! Bevy_saga will probably be used in larger projects. In such projects, modules will export only
+//! an event processor system while the rest of the module handles that event. In some cases your
+//! architecture doesn't allow you to export certain systems outside a certain hierarchy. In that
+//! case you won't be able to order concealed systems in one saga.
+//!
+//! This is a simple architectural problem. We recommend using
+//! [ScheduleLabels](bevy::ecs::schedule::ScheduleLabel) if you want to order sagas.
 //!
 //! # Example
 //!
@@ -254,7 +254,7 @@
 //!
 //! # Bevy Compatibility Matrix
 //!
-//! | bevy_saga_impl | bevy |
+//! | bevy_saga | bevy |
 //! |-----------|------|
 //! | 0.1       | 0.16 |
 
